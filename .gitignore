@@ -1,0 +1,45 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.turbo/
+.pnpm-store/
+
+# Tests
+playwright-report/
+test-results/
+.playwright/
+
+# Media and models — never committed
+*.mp4
+*.webm
+*.mkv
+*.mov
+*.vtt
+*.srt
+*.bin
+models/
+
+# Local infrastructure state
+docker-compose.override.yml
+infra/.data/
+minio-data/
+pgdata/
+
+# Editors and OS
+.idea/
+.vscode/
+.vs/
+.DS_Store
+Thumbs.db
