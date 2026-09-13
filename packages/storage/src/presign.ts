@@ -3,7 +3,11 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { assertAuthorized, type AuthorizationCheck } from "./authorization.js";
 import { resolvePresignTtlSeconds } from "./limits.js";
 
-/** [assumed] SPEC.md §11 — long enough that a long recording never cuts off mid-watch. */
+/**
+ * `docs/SPEC.md` §11: presigned reads live for six hours — long enough
+ * that nobody watching a long recording is cut off mid-way, short enough
+ * that a leaked URL expires on its own.
+ */
 export const DEFAULT_READ_URL_TTL_SECONDS = 6 * 60 * 60;
 
 const DEFAULT_UPLOAD_URL_TTL_SECONDS = 15 * 60;
@@ -24,10 +28,11 @@ export interface PresignReadOptions {
 
 /**
  * Mints a short-lived, unguessable GET url. The bucket itself is never
- * public — this presigned url is the only way to read the object, and it
- * is the access-control boundary, not the URL's obscurity.
- * `authorize` is checked first: a refusal throws before a `GetObjectCommand`
- * is even constructed, let alone signed.
+ * public, so a presigned url is the only way to read the object — but the
+ * url is not what grants access. `authorize` is: it is checked first, and
+ * a refusal throws before a `GetObjectCommand` is even constructed, let
+ * alone signed. Unguessability and the short lifetime limit the damage of
+ * a url that escapes; they are never the thing deciding who may watch.
  *
  * Range requests: SigV4 query signing (what `getSignedUrl` produces) signs
  * the method, path and query string, not the `Range` request header, so a
