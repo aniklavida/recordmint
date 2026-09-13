@@ -13,3 +13,5 @@ export {
 export type { CompletedPart } from "./multipart.js";
 export { checkStorageReachable } from "./health.js";
 export type { StorageHealth } from "./health.js";
+export { assertAuthorized, StorageAuthorizationError } from "./authorization.js";
+export type { AuthorizationCheck } from "./authorization.js";

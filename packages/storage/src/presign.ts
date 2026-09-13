@@ -1,5 +1,6 @@
 import { GetObjectCommand, PutObjectCommand, type S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { assertAuthorized, type AuthorizationCheck } from "./authorization.js";
 import { resolvePresignTtlSeconds } from "./limits.js";
 
 /** [assumed] SPEC.md §11 — long enough that a long recording never cuts off mid-watch. */
@@ -11,12 +12,22 @@ export interface PresignReadOptions {
   bucket: string;
   key: string;
   expiresInSeconds?: number;
+  /**
+   * Checked before anything else in this function runs. The caller closes
+   * over whatever it needs (link visibility, workspace membership, a
+   * password check) and returns whether this specific read is allowed —
+   * see authorization.ts for why this lives outside the storage package's
+   * own knowledge.
+   */
+  authorize: AuthorizationCheck;
 }
 
 /**
  * Mints a short-lived, unguessable GET url. The bucket itself is never
  * public (DECISIONS.md) — this presigned url is the only way to read the
  * object, and it is the access-control boundary, not the URL's obscurity.
+ * `authorize` is checked first: a refusal throws before a `GetObjectCommand`
+ * is even constructed, let alone signed.
  *
  * Range requests: SigV4 query signing (what `getSignedUrl` produces) signs
  * the method, path and query string, not the `Range` request header, so a
@@ -31,6 +42,7 @@ export async function presignRead(
   client: S3Client,
   options: PresignReadOptions,
 ): Promise<string> {
+  await assertAuthorized(options.authorize);
   const command = new GetObjectCommand({ Bucket: options.bucket, Key: options.key });
   return getSignedUrl(client, command, {
     expiresIn: resolvePresignTtlSeconds(options.expiresInSeconds, DEFAULT_READ_URL_TTL_SECONDS),
@@ -41,13 +53,15 @@ export interface PresignUploadPartOptions {
   bucket: string;
   key: string;
   expiresInSeconds?: number;
+  authorize: AuthorizationCheck;
 }
 
-/** Mints a short-lived PUT url for a single, non-multipart upload. */
+/** Mints a short-lived PUT url for a single, non-multipart upload. `authorize` gates it, checked first. */
 export async function presignUpload(
   client: S3Client,
   options: PresignUploadPartOptions,
 ): Promise<string> {
+  await assertAuthorized(options.authorize);
   const command = new PutObjectCommand({ Bucket: options.bucket, Key: options.key });
   return getSignedUrl(client, command, {
     expiresIn: resolvePresignTtlSeconds(options.expiresInSeconds, DEFAULT_UPLOAD_URL_TTL_SECONDS),
