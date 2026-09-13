@@ -18,11 +18,10 @@ export type AuthorizationCheck = () => boolean | Promise<boolean>;
  * URL or opens/completes/aborts a multipart upload takes an `authorize`
  * callback and calls this as its first line — before it builds any AWS
  * SDK command — so a refusal never reaches the SDK, let alone the
- * network. This is what "server-side authorisation checks before a
- * presign is issued, not after" (Notion card 6) means concretely: the
- * check is not a wrapper the caller might forget to apply, it is the
- * first statement inside the function that would otherwise mint the
- * credential.
+ * network. Server-side authorisation runs before a presign is issued, not
+ * after, and this is what that means concretely: the check is not a wrapper
+ * the caller might forget to apply, it is the first statement inside the
+ * function that would otherwise mint the credential.
  *
  * Deliberately opaque to *what* is being authorized — a workspace
  * membership check, a recording ownership check, whatever the app layer

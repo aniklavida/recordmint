@@ -24,9 +24,9 @@ describe("assertAuthorized", () => {
 });
 
 /**
- * The card-6 requirement in its most literal form: an unauthorised request
- * must be refused *before any URL is minted*. A client that throws the
- * instant it is asked to do anything proves the guard runs first — if the
+ * The authorisation requirement in its most literal form: an unauthorised
+ * request must be refused *before any URL is minted*. A client that throws
+ * the instant it is asked to do anything proves the guard runs first — if the
  * authorization check ran after building/signing, this fake would have
  * been invoked and the test would fail with the fake's error instead of
  * StorageAuthorizationError.

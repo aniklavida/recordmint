@@ -55,8 +55,8 @@ export async function deleteRecordingObjects(
 
 /**
  * Deletes every object belonging to a set of recordings — the storage half
- * of "per-workspace deletion straightforward" (Notion card 6). The object
- * layout has no workspace segment (SPEC.md §11, `docs/ARCHITECTURE.md`:
+ * of keeping per-workspace deletion straightforward. The object layout
+ * has no workspace segment (SPEC.md §11, `docs/ARCHITECTURE.md`:
  * "the object key layout is defined in exactly one file"), so a workspace
  * delete is resolved in two steps rather than one prefix delete: the
  * caller looks up the workspace's recording ids from `packages/db`

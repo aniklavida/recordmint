@@ -1,8 +1,8 @@
 /**
  * Presigned URLs are credentials — this repository's own CI scans for one
- * leaking into a committed file alongside token patterns (Notion card 6,
+ * leaking into a committed file alongside token patterns (see
  * `.github/workflows/validate.yml`'s "Reject presigned storage URLs" step).
- * "Short presign lifetimes" is enforced here as a hard ceiling, not left to
+ * A short presign lifetime is enforced here as a hard ceiling, not left to
  * every caller remembering to pass a small number: no function in this
  * package can mint a URL that outlives `MAX_PRESIGN_TTL_SECONDS`, no matter
  * what it is asked for.

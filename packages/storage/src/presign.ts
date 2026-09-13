@@ -24,8 +24,8 @@ export interface PresignReadOptions {
 
 /**
  * Mints a short-lived, unguessable GET url. The bucket itself is never
- * public (DECISIONS.md) — this presigned url is the only way to read the
- * object, and it is the access-control boundary, not the URL's obscurity.
+ * public — this presigned url is the only way to read the object, and it
+ * is the access-control boundary, not the URL's obscurity.
  * `authorize` is checked first: a refusal throws before a `GetObjectCommand`
  * is even constructed, let alone signed.
  *
@@ -34,9 +34,9 @@ export interface PresignReadOptions {
  * player adding `Range: bytes=...` to its `fetch`/`<video>` request against
  * this same URL is unaffected by the signature and the store answers it
  * with a normal 206 Partial Content — the caller does not need a
- * range-specific presign. Verified against a live MinIO instance
- * (packages/storage's card-6 verification run): a non-zero-start range on
- * a presigned GET returned 206 with the correct `Content-Range` and bytes.
+ * range-specific presign. Verified against a live MinIO instance (see
+ * `__tests__/live.test.ts`): a non-zero-start range on a presigned GET
+ * returned 206 with the correct `Content-Range` and bytes.
  */
 export async function presignRead(
   client: S3Client,
