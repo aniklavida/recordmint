@@ -44,6 +44,33 @@ Native desktop app · multi-track editing · a hosted tier · a browser extensio
 
 The browser extension is a later convenience, not a missing piece — the web app records without it.
 
+## Development
+
+The monorepo skeleton and local infrastructure exist; recording, upload and
+playback do not yet. There is nothing to demo.
+
+```
+cp .env.example .env   # for a real deployment — docker compose up below needs no setup
+pnpm install
+pnpm run build
+pnpm run lint
+pnpm run typecheck
+pnpm run test
+```
+
+`docker compose -f infra/compose.yaml up` starts Postgres, MinIO (with its
+bucket already created) and both application processes, using throwaway
+local-development credentials baked into `infra/compose.yaml` — not the
+values in `.env.example`, which are for a real deployment. The web app is
+then reachable at `http://localhost:3000`, and `/api/health` reports
+database, storage and transcription status.
+
+`pnpm run e2e` runs the Playwright suite, which drives a browser with a
+fake capture device (`--use-fake-device-for-media-stream`) so recording
+behaviour can be tested in CI without a human at a screen picker. It
+currently proves the harness itself works; specs that exercise an actual
+record → share → play flow land with the cards that build those features.
+
 ## Documentation
 
 - [Product specification](docs/SPEC.md)
