@@ -9,7 +9,7 @@
   "packageManager": "pnpm@9.12.0",
   "scripts": {
     "build": "pnpm -r --if-present run build",
-    "lint": "pnpm -r --if-present run lint",
+    "lint": "pnpm run check-licenses && pnpm -r --if-present run lint",
     "typecheck": "pnpm -r --if-present run typecheck",
     "test": "pnpm -r --if-present run test",
     "dep-check": "dependency-cruiser --config .dependency-cruiser.cjs packages/recorder/src",
