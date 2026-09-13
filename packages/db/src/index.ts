@@ -5,3 +5,5 @@ export { checkDbReachable } from "./health.js";
 export type { DbHealth } from "./health.js";
 export * from "./schema/index.js";
 export * from "./queries/index.js";
+export { createQueue } from "./queue.js";
+export type { QueueConfig } from "./queue.js";
