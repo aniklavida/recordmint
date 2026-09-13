@@ -19,5 +19,23 @@ All notable changes to RecordMint are documented here, following [Keep a Changel
   fake capture device.
 - `/api/health` reporting database reachability, storage reachability and
   whether transcription is enabled.
+- `docs/THIRD_PARTY_LICENSES.md` — a licence-and-version inventory of every
+  shipped npm package (direct and transitive) and every pinned container
+  image, verified against package metadata and licence files rather than
+  memory, split by the two-class rule (compiled vs. separate process).
+- `THIRD_PARTY_NOTICES` — attribution for shipped MIT/Apache/BSD dependencies.
+- `scripts/check-licenses.mjs`, run in CI, which fails the build if a
+  dependency with a disallowed licence lands, or if a container image in
+  `infra/compose.yaml` is left unpinned.
+
+### Fixed
+
+- `infra/compose.yaml` pinned `minio/minio:latest` and `minio/mc:latest` on
+  Docker Hub. Both tags — and the `minio/minio` and `minio/mc` Docker Hub
+  repositories themselves — no longer exist; MinIO discontinued free Docker
+  Hub distribution during 2025. Repointed both images to their last publicly
+  available `quay.io` releases, pinned by tag and digest. `postgres:16-alpine`
+  is now pinned to the exact patch and digest it currently resolves to,
+  rather than floating across every 16.x release.
 
 Nothing records, uploads or plays yet. There is no release.

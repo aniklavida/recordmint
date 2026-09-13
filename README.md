@@ -78,7 +78,8 @@ record → share → play flow land with the cards that build those features.
 - [Folder structure](docs/STRUCTURE.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Release checklist](docs/RELEASE_CHECKLIST.md)
+- [Third-party licence audit](docs/THIRD_PARTY_LICENSES.md)
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). Every dependency that ships in the compiled code is audited to the same standard — see the [third-party licence audit](docs/THIRD_PARTY_LICENSES.md) and [`THIRD_PARTY_NOTICES`](THIRD_PARTY_NOTICES).

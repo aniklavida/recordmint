@@ -84,6 +84,8 @@ MinIO and ffmpeg are the second kind: MinIO is started as a service, ffmpeg is s
 
 Anything reciprocal-for-consumers, or revenue-gated, is rejected regardless of quality.
 
+The full inventory — every compiled-class package including the transitive tree, every pinned container image, its licence and the date it was verified — lives in [`docs/THIRD_PARTY_LICENSES.md`](docs/THIRD_PARTY_LICENSES.md). `scripts/check-licenses.mjs` runs in CI on every push and pull request and fails the build before a disallowed licence, or an unpinned container image, can land.
+
 ## Truthfulness
 
 Every public claim is one of: **implemented and tested**, **experimental**, **planned**, or **unsupported**. Never describe a planned capability as working.

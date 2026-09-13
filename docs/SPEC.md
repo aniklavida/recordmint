@@ -230,23 +230,26 @@ Failure is non-fatal. A recording without a transcript is a normal recording.
 | Compiled into shipped code | **MIT / Apache / BSD only** |
 | Run as a separate process | Copyleft acceptable — it never reaches user code |
 
-| Dependency | Licence | Class |
-|---|---|---|
-| Plyr | MIT | compiled |
-| hls.js *(planned)* | Apache-2.0 | compiled |
-| Next.js | MIT | compiled |
-| Drizzle ORM | Apache-2.0 | compiled |
-| pg-boss | MIT | compiled |
-| AWS SDK for JavaScript v3 | Apache-2.0 | compiled |
-| Tailwind CSS | MIT | compiled |
-| Vitest · Playwright | MIT / Apache-2.0 | compiled (development) |
-| whisper.cpp | MIT | separate process |
-| faster-whisper | MIT | separate process |
-| PostgreSQL | PostgreSQL Licence | separate process |
-| MinIO | AGPL-3.0 | **separate process — copyleft never reaches user code** |
-| ffmpeg | LGPL/GPL depending on build | **invoked as a binary, never linked** |
+| Dependency | Licence | Class | Status |
+|---|---|---|---|
+| Next.js | MIT | compiled | shipped |
+| React / ReactDOM | MIT | compiled | shipped |
+| Drizzle ORM | Apache-2.0 | compiled | shipped |
+| pg-boss | MIT | compiled | shipped |
+| `postgres` (client) | Unlicense | compiled | shipped |
+| AWS SDK for JavaScript v3 | Apache-2.0 | compiled | shipped |
+| nanoid | MIT | compiled | shipped |
+| Plyr | — | compiled (planned) | **not yet a dependency of any workspace member** |
+| hls.js | Apache-2.0 | compiled (planned) | **not yet a dependency of any workspace member** |
+| Tailwind CSS | — | compiled (planned) | **not yet a dependency of any workspace member** |
+| PostgreSQL (image) | PostgreSQL Licence | separate process | shipped, `infra/compose.yaml` |
+| MinIO (image) | AGPL-3.0 | **separate process — copyleft never reaches user code** | shipped, `infra/compose.yaml` |
+| whisper.cpp / faster-whisper | MIT | separate process | **planned — no worker code invokes either yet** |
+| ffmpeg | LGPL/GPL depending on build | **invoked as a binary, never linked** | **planned — not installed by any Dockerfile yet** |
 
-**MinIO and ffmpeg are why the two-class rule exists.** Both are copyleft, both are fine, and both would be a licence problem if they were linked instead of run. The compose file starts MinIO as a service; the worker shells out to ffmpeg. Neither is a library RecordMint imports.
+This table states the policy and the current shape of the dependency tree; it is not the audit itself. **The audited inventory — every compiled-class package including the transitive tree, every pinned container image, the licence, the class and the date each was verified — lives in [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) and is re-checked by CI on every push.**
+
+**MinIO and ffmpeg are why the two-class rule exists.** Both are copyleft, both are fine, and both would be a licence problem if they were linked instead of run. The compose file starts MinIO as a service; the worker will shell out to ffmpeg once it is actually wired in. Neither is a library RecordMint imports.
 
 **Browser capture itself needs no dependency.** `getDisplayMedia` and `MediaRecorder` are the platform.
 
