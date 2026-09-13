@@ -3,9 +3,9 @@ import { users } from "./users.js";
 import { workspaces } from "./workspaces.js";
 
 /**
- * The recording state machine (card scope): uploading -> ready | failed,
- * and a recoverable path back to `uploading` from `failed` so a retried
- * upload re-enters the same row rather than creating an orphan. Valid
+ * The recording state machine: uploading -> ready | failed, and a
+ * recoverable path back to `uploading` from `failed` so a retried upload
+ * re-enters the same row rather than creating an orphan. Valid
  * transitions are enforced in code, not by the database, in
  * `../queries/recording-state.ts` — the enum only constrains the set of
  * values a row may hold.

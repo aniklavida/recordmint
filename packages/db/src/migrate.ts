@@ -12,8 +12,9 @@ const MIGRATIONS_FOLDER = join(dirname(fileURLToPath(import.meta.url)), "..", "m
  * Applies every migration under ./migrations. Drizzle tracks applied
  * migrations in its own `__drizzle_migrations` table, which is what makes
  * running this on an empty database and running it again on a database
- * that already has every migration both safe — the operator-facing
- * requirement from the infrastructure card.
+ * that already has every migration both safe. An operator runs the same
+ * command on a fresh machine and on an existing one without having to
+ * know which is which (`docs/ROADMAP.md` step 7, idempotent migrations).
  *
  * Called by both apps on startup, and directly via `pnpm db:migrate`.
  */

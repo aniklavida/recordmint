@@ -3,9 +3,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createQueue } from "../queue.js";
 
 /**
- * Confirms the card's pg-boss requirement against a real Postgres: the
- * queue starts (creating its own `pgboss` schema) and a job survives a
- * real enqueue/fetch/complete round trip. Skipped without DATABASE_URL
+ * Confirms the pg-boss setup against a real Postgres: the queue starts
+ * (creating its own `pgboss` schema) and a job survives a real
+ * enqueue/fetch/complete round trip. Skipped without DATABASE_URL
  * for the same reason as visibility.test.ts — CI has no live Postgres.
  */
 describe.skipIf(!process.env.DATABASE_URL)("pg-boss queue", () => {

@@ -1,5 +1,6 @@
 /**
- * Table definitions, one file per table group (STRUCTURE.md §6):
+ * Table definitions, one file per table group, as `docs/STRUCTURE.md`
+ * lays out `packages/db`:
  * workspaces, users, memberships, sessions, recordings, parts, comments,
  * transcripts, views. pg-boss's own tables are not defined here — they
  * are created and migrated by pg-boss itself; see `../queue.ts`.

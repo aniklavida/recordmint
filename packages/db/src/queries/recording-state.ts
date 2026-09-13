@@ -7,9 +7,9 @@ type OrmClient = PostgresJsDatabase<typeof schema>;
 export type RecordingStatus = (typeof schema.recordingStatusEnum.enumValues)[number];
 
 /**
- * The recording state machine (card scope): uploading -> ready | failed,
- * and a recoverable path back to `uploading` from either terminal state
- * so a retry re-enters the same row instead of orphaning it.
+ * The recording state machine: uploading -> ready | failed, and a
+ * recoverable path back to `uploading` from either terminal state so a
+ * retry re-enters the same row instead of orphaning it.
  *
  *   uploading -> ready     upload finished, the object is playable
  *   uploading -> failed    upload was abandoned or the server-side

@@ -7,8 +7,8 @@ import { runMigrations } from "../migrate.js";
 import * as schema from "../schema/index.js";
 
 /**
- * The card's explicit test: "insert two workspaces, attempt a
- * cross-workspace read, confirm it returns nothing." Runs against a real
+ * The test this file exists for: insert two workspaces, attempt a
+ * cross-workspace read, confirm it returns nothing. Runs against a real
  * Postgres — there is no mock here that could hide a query bug, which is
  * the entire point of testing a query that is the access-control boundary.
  *

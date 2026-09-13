@@ -5,9 +5,9 @@ import * as schema from "../schema/index.js";
 type OrmClient = PostgresJsDatabase<typeof schema>;
 
 /**
- * The visibility model, enforced here rather than in the UI (card scope:
- * "A query must not be able to return a recording the caller is not
- * entitled to see, even if the UI asks for it").
+ * The visibility model, enforced here rather than in the UI: a query must
+ * not be able to return a recording the caller is not entitled to see,
+ * even if the UI asks for it.
  *
  * Every function below decides what a caller may see by joining against
  * `memberships` (or the recording's own visibility columns for a public
