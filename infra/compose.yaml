@@ -1,0 +1,102 @@
+# Four processes, two stores — web, worker, Postgres, MinIO. No Redis, no
+# broker, no transcoding tier (DECISIONS.md). Every credential below is a
+# throwaway local-development default, not a production secret: a real
+# deployment fills .env.example instead of reusing these values.
+name: recordmint
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: recordmint
+      POSTGRES_PASSWORD: recordmint
+      POSTGRES_DB: recordmint
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recordmint -d recordmint"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+      MINIO_BUCKET: recordmint
+    entrypoint: ["/bin/sh", "/bootstrap/create-bucket.sh"]
+    volumes:
+      - ./minio/create-bucket.sh:/bootstrap/create-bucket.sh:ro
+    restart: "no"
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.web
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgres://recordmint:recordmint@postgres:5432/recordmint
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: recordmint
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_SECRET_ACCESS_KEY: minioadmin123
+      S3_FORCE_PATH_STYLE: "true"
+      PUBLIC_BASE_URL: http://localhost:3000
+      SESSION_SECRET: local-development-only-secret-do-not-use-in-production
+      PORT: "3000"
+      TRANSCRIPTION_ENABLED: "false"
+    ports:
+      - "3000:3000"
+
+  worker:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgres://recordmint:recordmint@postgres:5432/recordmint
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: recordmint
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_SECRET_ACCESS_KEY: minioadmin123
+      S3_FORCE_PATH_STYLE: "true"
+      TRANSCRIPTION_ENABLED: "false"
+      WHISPER_MODEL: base
+
+volumes:
+  pgdata:
+  minio-data:
