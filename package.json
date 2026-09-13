@@ -1,0 +1,27 @@
+{
+  "name": "recordmint",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "build": "pnpm -r --if-present run build",
+    "lint": "pnpm -r --if-present run lint",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "test": "pnpm -r --if-present run test",
+    "dep-check": "dependency-cruiser --config .dependency-cruiser.cjs packages/recorder/src",
+    "e2e": "playwright test --config e2e/playwright.config.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.12.0",
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^20.16.0",
+    "dependency-cruiser": "^16.4.2",
+    "eslint": "^9.12.0",
+    "typescript": "^5.6.2",
+    "typescript-eslint": "^8.8.0"
+  }
+}
