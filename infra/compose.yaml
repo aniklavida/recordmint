@@ -2,11 +2,19 @@
 # broker, no transcoding tier (DECISIONS.md). Every credential below is a
 # throwaway local-development default, not a production secret: a real
 # deployment fills .env.example instead of reusing these values.
+#
+# Every image below is pinned to an exact tag and digest, verified in
+# docs/THIRD_PARTY_LICENSES.md. Postgres and MinIO are separate-process
+# dependencies (AGPL-3.0 for MinIO is fine here — see AGENTS.md's two-class
+# rule); pinning is about reproducibility and availability, not licence.
+# MinIO discontinued free Docker Hub distribution during 2025 — `minio/minio`
+# and `minio/mc` are gone from Docker Hub entirely, so both now pull from
+# their quay.io mirror instead.
 name: recordmint
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16.15-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
     environment:
       POSTGRES_USER: recordmint
       POSTGRES_PASSWORD: recordmint
@@ -22,7 +30,7 @@ services:
       retries: 10
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: minioadmin
@@ -39,7 +47,7 @@ services:
       retries: 10
 
   minio-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
     depends_on:
       minio:
         condition: service_healthy
