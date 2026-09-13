@@ -6,6 +6,13 @@ import {
   type S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { resolvePresignTtlSeconds } from "./limits.js";
+
+/** S3's own bounds on a multipart upload's part number (inclusive). */
+const MIN_PART_NUMBER = 1;
+const MAX_PART_NUMBER = 10_000;
+
+const DEFAULT_UPLOAD_PART_TTL_SECONDS = 15 * 60;
 
 export interface CreateMultipartOptions {
   bucket: string;
@@ -44,13 +51,20 @@ export async function presignUploadPart(
   client: S3Client,
   options: SignPartOptions,
 ): Promise<string> {
+  if (!Number.isInteger(options.partNumber) || options.partNumber < MIN_PART_NUMBER || options.partNumber > MAX_PART_NUMBER) {
+    throw new Error(
+      `partNumber must be an integer between ${MIN_PART_NUMBER} and ${MAX_PART_NUMBER}, got ${options.partNumber}`,
+    );
+  }
   const command = new UploadPartCommand({
     Bucket: options.bucket,
     Key: options.key,
     UploadId: options.uploadId,
     PartNumber: options.partNumber,
   });
-  return getSignedUrl(client, command, { expiresIn: options.expiresInSeconds ?? 15 * 60 });
+  return getSignedUrl(client, command, {
+    expiresIn: resolvePresignTtlSeconds(options.expiresInSeconds, DEFAULT_UPLOAD_PART_TTL_SECONDS),
+  });
 }
 
 export interface CompletedPart {
