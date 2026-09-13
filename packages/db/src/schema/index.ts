@@ -1,10 +1,15 @@
 /**
- * Table definitions live here, one file per table group (see STRUCTURE.md
- * §6): workspaces, users, memberships, sessions, recordings, share-links,
- * comments, transcripts, views.
- *
- * This card ships the connection and migration machinery only — the first
- * table arrives with the feature that needs it, so a schema is never
- * written ahead of the code that uses it.
+ * Table definitions, one file per table group (STRUCTURE.md §6):
+ * workspaces, users, memberships, sessions, recordings, parts, comments,
+ * transcripts, views. pg-boss's own tables are not defined here — they
+ * are created and migrated by pg-boss itself; see `../queue.ts`.
  */
-export {};
+export * from "./users.js";
+export * from "./sessions.js";
+export * from "./workspaces.js";
+export * from "./memberships.js";
+export * from "./recordings.js";
+export * from "./parts.js";
+export * from "./comments.js";
+export * from "./transcripts.js";
+export * from "./views.js";
