@@ -1,7 +1,10 @@
 # Four processes, two stores — web, worker, Postgres, MinIO. No Redis, no
-# broker, no transcoding tier (DECISIONS.md). Every credential below is a
-# throwaway local-development default, not a production secret: a real
-# deployment fills .env.example instead of reusing these values.
+# broker, no transcoding tier: the job queue rides on the Postgres that is
+# already here, and the browser records a file that already plays everywhere,
+# so a self-hoster runs, backs up and restores two services instead of five.
+# Every credential below is a throwaway local-development default, not a
+# production secret: a real deployment fills .env.example instead of
+# reusing these values.
 #
 # Every image below is pinned to an exact tag and digest, verified in
 # docs/THIRD_PARTY_LICENSES.md. Postgres and MinIO are separate-process
