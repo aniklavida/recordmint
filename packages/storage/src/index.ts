@@ -1,5 +1,6 @@
 export { createStorageClient, loadStorageConfigFromEnv } from "./client.js";
 export type { StorageConfig } from "./client.js";
+export { MAX_PRESIGN_TTL_SECONDS } from "./limits.js";
 export { originalKey, posterKey, transcriptKey, recordingKeyPrefix } from "./keys.js";
 export { presignRead, presignUpload, DEFAULT_READ_URL_TTL_SECONDS } from "./presign.js";
 export {
