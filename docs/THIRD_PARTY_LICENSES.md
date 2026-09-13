@@ -1,6 +1,6 @@
 # Third-party licence audit
 
-**Last verified: 2026-09-13.** This inventory is regenerated and re-checked at every release, not trusted from a prior note — see [`scripts/check-licenses.mjs`](../scripts/check-licenses.mjs), which CI runs on every push and pull request.
+**Last verified: 2026-09-14.** This inventory is regenerated and re-checked at every release, not trusted from a prior note — see [`scripts/check-licenses.mjs`](../scripts/check-licenses.mjs), which CI runs on every push and pull request.
 
 ## Why this file exists
 
@@ -27,7 +27,7 @@ Every entry was checked against the package's own published metadata or licence 
 
 ## Compiled class — shipped in `apps/web` and `apps/worker`
 
-83 packages, direct and transitive, across every `dependencies` (not `devDependencies`) entry in the six workspace members (`apps/web`, `apps/worker`, `packages/db`, `packages/storage`, `packages/shared`, `packages/recorder`). **All are MIT, Apache-2.0, BSD-3-Clause, ISC, Unlicense, 0BSD, or dual-licensed MIT/CC0-1.0 — every one clears the compiled-class bar.** `caniuse-lite`'s CC-BY-4.0 covers only its bundled browser-compatibility *data* (used at build time by Next.js/`browserslist`, not executed at runtime); it requires attribution for that data, which is why it is also listed in `THIRD_PARTY_NOTICES`.
+83 packages, direct and transitive, across every `dependencies` (not `devDependencies`) entry in the six workspace members (`apps/web`, `apps/worker`, `packages/db`, `packages/storage`, `packages/shared`, `packages/recorder`). **All are MIT, Apache-2.0, BSD-3-Clause, ISC, Unlicense, 0BSD, or dual-licensed MIT/CC0-1.0 — every one clears the compiled-class bar.** `caniuse-lite`'s CC-BY-4.0 covers only its bundled browser-compatibility *data* (used at build time by Next.js/`browserslist`, not executed at runtime); see [Attribution](#attribution) below for what that requires.
 
 Direct production dependencies, by workspace member:
 
@@ -133,9 +133,13 @@ Full transitive compiled-class tree (package, resolved version, licence), verifi
 | `type-fest` | 0.20.2 | (MIT OR CC0-1.0) |
 | `xtend` | 4.0.2 | MIT |
 
-## Build and CI tooling — audited, never shipped
+## Build and CI tooling — held to the same bar, because it ships too
 
-`eslint`, `typescript`, `vitest`, `@playwright/test`'s own harness dependencies, `dependency-cruiser`, `tsx`, `drizzle-kit` and everything they pull in (198 unique packages across all six workspace members' `devDependencies`, transitively) never enter a built artifact — nothing under this class is present in `infra/Dockerfile.web` or `infra/Dockerfile.worker`'s final `runner` stage, and none of it ships to a self-hoster. They were still run through the same `pnpm licenses list --json` audit for completeness and CI provenance: **all 198 are MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, 0BSD, Python-2.0 or BlueOak-1.0.0.** None is copyleft, so this class carries no risk even though the compiled-class rule doesn't strictly apply to it. Reproduce with `pnpm licenses list --json` from a clean install.
+**Finding, corrected in this audit:** an earlier version of this file assumed `eslint`, `typescript`, `vitest`, `@playwright/test`'s own harness dependencies, `dependency-cruiser`, `tsx`, `drizzle-kit` and everything they pull in (198 unique packages across all six workspace members' `devDependencies`, transitively) "never enter a built artifact" because they are `devDependencies`. That is false for how this repository actually builds its images: `infra/Dockerfile.web` and `infra/Dockerfile.worker` both run `pnpm install --frozen-lockfile` with no `--prod` flag, then `COPY --from=build /app ./` copies the entire built tree — including the full `node_modules` — into the final `runner` stage. Nothing is pruned. A self-hoster's container image genuinely contains this class, not just the one above.
+
+Since nothing here is actually separated from the compiled class by the time it reaches a shipped image, it is audited to the identical rule: MIT, Apache-2.0 or BSD only, no exception for being a `devDependency`. **All 198 are MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, 0BSD, Python-2.0 or BlueOak-1.0.0** — every one already clears the bar, so this correction changes what the file claims, not what a self-hoster is exposed to. [`scripts/check-licenses.mjs`](../scripts/check-licenses.mjs) enforces this directly: it does not distinguish `dependencies` from `devDependencies` at all, and checks every package pnpm actually resolved. Reproduce the human-readable table with `pnpm licenses list --json` from a clean install.
+
+Trimming the final image down to a production-only `node_modules` (so this class stops shipping at all) is a real improvement worth making, but it is an image-size and attack-surface question, not a licence one — every package in it already passes the class rule — so it is left for a separate change rather than folded into this audit.
 
 ## Process class — Docker images in `infra/compose.yaml`
 
@@ -157,8 +161,19 @@ Started as separate operating-system processes by `docker compose`. RecordMint n
 
 ## Attribution
 
-See [`THIRD_PARTY_NOTICES`](../THIRD_PARTY_NOTICES) at the repository root. Apache-2.0 requires forwarding any `NOTICE` file the upstream project ships; none of RecordMint's shipped Apache-2.0 dependencies (the AWS SDK v3 packages, `@smithy/*`, `drizzle-orm`, `@swc/*`) bundle one. MIT and Apache-2.0 both require preserving the copyright and permission notice for redistributed code, which `THIRD_PARTY_NOTICES` does for every shipped compiled-class package. Nothing has been copied or adapted from any of these projects — they are used as unmodified dependencies — so no further attribution is owed beyond that notice file.
+**No aggregated `THIRD_PARTY_NOTICES` file exists, and this audit records in writing that none is owed beyond what already ships.**
+
+Nothing has been copied or adapted from any dependency in this file — every one is used as an unmodified package installed by pnpm, never vendored or edited. MIT and Apache-2.0 both require the copyright and permission notice to travel with redistributed copies of the software; because `infra/Dockerfile.web` and `infra/Dockerfile.worker` copy the built tree wholesale (see the finding above), every shipped package's own `LICENSE` file ships unmodified, at its own path, inside the image's `node_modules` — the notice is already present in the software being redistributed, which is what both licences require. No file at this repository's root strips or replaces it.
+
+Apache-2.0 additionally requires forwarding any `NOTICE` file the upstream project itself ships. Checked directly against the installed packages, not assumed: of RecordMint's shipped Apache-2.0 dependencies, only `playwright` and `playwright-core` carry one (`node_modules/playwright/NOTICE`, crediting Microsoft Corporation and disclosing derived Puppeteer code, itself Apache-2.0) — the AWS SDK v3 packages, `@smithy/*`, `drizzle-orm` and `@swc/*` do not. Because that `NOTICE` file ships in place inside `node_modules/playwright/` the same way its `LICENSE` does, it is already forwarded by the same unmodified-redistribution reasoning above; no separate copy is needed.
+
+`caniuse-lite`'s CC-BY-4.0 covers its bundled browser-compatibility *data* (read at build time by Next.js/`browserslist`, not executed at runtime); its own `LICENSE` file, which names the attribution, ships the same way as every other package's above.
 
 ## CI enforcement
 
-`.github/workflows/ci.yml` runs `node scripts/check-licenses.mjs` on every push and pull request. It re-derives the same table this file documents from the installed `node_modules` tree and fails the build if any package's licence is outside the allowed permissive set, or if `infra/compose.yaml` pins a container image with a floating `:latest` tag or without a digest. A dependency with a disallowed licence — compiled or not — cannot land without the check going red first.
+`.github/workflows/ci.yml` runs `node scripts/check-licenses.mjs` on every push and pull request, right after `pnpm install`. It has no runtime dependencies of its own (Node built-ins only) and does two things:
+
+- Walks `node_modules/.pnpm` — pnpm's own record of every package version this workspace actually resolved, `dependencies` and `devDependencies` alike, direct or transitive — reads each one's own `package.json` `license` field directly, and fails the build if any of them falls outside the permissive allow-list above, or matches a reject-regardless-of-class licence.
+- Parses every `image:` line in `infra/compose.yaml` and fails if an image has no `@sha256:` digest, no explicit tag alongside that digest, or isn't one of the images this file has audited.
+
+**Proven, not just written:** a real dependency was added under a `GPL-3.0` licence to `packages/shared`, installed with `pnpm install`, and the check failed, printing exactly `DISALLOWED LICENCE: npm package "tmp-copyleft-demo@1.0.0" is "GPL-3.0" …`. The dependency was then removed and `pnpm install --frozen-lockfile` re-run; the check passed again. A dependency with a disallowed licence — `devDependency` or not — cannot land without the check going red first.

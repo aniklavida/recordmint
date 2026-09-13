@@ -39,7 +39,7 @@
 
 ## Repository
 
-- [ ] Every shipped dependency is listed with its licence and passes the class rule.
+- [ ] `node scripts/check-licenses.mjs` passes against a clean `pnpm install`, and `docs/THIRD_PARTY_LICENSES.md`'s verification date and container-image digests are re-checked and updated, not carried forward from a prior release — a permissive dependency can relicense, and a container tag can start resolving to a different image, between releases.
 - [ ] README, specification, architecture, structure and self-hosting documentation are complete.
 - [ ] Security policy, code of conduct and contributor instructions are complete.
 - [ ] Repository description, topics and homepage are set.
