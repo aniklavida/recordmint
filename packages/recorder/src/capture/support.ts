@@ -1,11 +1,11 @@
 /**
  * The capability probe. This runs BEFORE the record button is enabled,
  * never after — an unsupported browser has to be found before someone has
- * recorded fifteen minutes they are about to lose (STRUCTURE.md §3).
+ * recorded fifteen minutes they are about to lose.
  *
- * Capture, encoding and upload (roadmap step 2) are not built yet; this
- * card ships the probe alone because it is the one piece of the recorder
- * that has to exist before anything else does.
+ * Capture, encoding and upload are not built yet (`docs/ROADMAP.md` step
+ * 2, "Record to a link"); the probe ships ahead of them because it is the
+ * one piece of the recorder that has to exist before anything else does.
  */
 
 export type UnsupportedReason =

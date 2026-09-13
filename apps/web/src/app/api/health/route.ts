@@ -21,9 +21,9 @@ interface HealthResponse {
 
 /**
  * Reports database reachability, storage reachability and whether
- * transcription is enabled — the infrastructure card's operator-facing
- * requirement. Every branch below is written to *report* a broken
- * dependency, never to throw past this handler.
+ * transcription is enabled. This is the endpoint an operator points a
+ * monitor at (`docs/ROADMAP.md` step 7), so every branch below is written
+ * to *report* a broken dependency, never to throw past this handler.
  */
 export async function GET(): Promise<Response> {
   const [database, storage] = await Promise.all([checkDatabase(), checkStorage()]);

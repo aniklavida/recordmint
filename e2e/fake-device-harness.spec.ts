@@ -3,8 +3,8 @@ import { expect, test } from "@playwright/test";
 /**
  * Proves the fake-device harness itself works, before any capture code is
  * built on top of it. `record.spec.ts` (fake device → share link),
- * `share.spec.ts` and `playback.spec.ts` land with the roadmap cards that
- * build recording, sharing and playback — writing them now against
+ * `share.spec.ts` and `playback.spec.ts` arrive with the features they
+ * test (`docs/ROADMAP.md` steps 2-4) — writing them now against
  * features that do not exist would be exactly the false-positive coverage
  * AGENTS.md's truthfulness rule warns about.
  */

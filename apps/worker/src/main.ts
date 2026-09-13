@@ -3,13 +3,13 @@ import { runMigrations } from "@recordmint/db";
 
 /**
  * The worker process. Nothing here is on the critical path to a share
- * link (AGENTS.md, STRUCTURE.md §5) — stopping this process must never
- * break recording, upload, sharing or playback.
+ * link (`docs/STRUCTURE.md`, `apps/worker`) — stopping this process must
+ * never break recording, upload, sharing or playback.
  *
- * No jobs are registered yet: transcript, thumbnail and retention land
- * with the worker card (roadmap step 5). This card ships the piece that
- * has to exist before any of them can: a queue connection that starts
- * cleanly and shuts down cleanly.
+ * No jobs are registered yet: transcript, thumbnail and retention arrive
+ * with the worker itself (`docs/ROADMAP.md` step 5). What ships today is
+ * the piece that has to exist before any of them can: a queue connection
+ * that starts cleanly and shuts down cleanly.
  */
 async function main(): Promise<void> {
   const connectionString = requireEnv("DATABASE_URL");

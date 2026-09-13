@@ -69,7 +69,9 @@ database, storage and transcription status.
 fake capture device (`--use-fake-device-for-media-stream`) so recording
 behaviour can be tested in CI without a human at a screen picker. It
 currently proves the harness itself works; specs that exercise an actual
-record → share → play flow land with the cards that build those features.
+record → share → play flow arrive alongside recording, sharing and
+playback themselves, which are still being built — see the
+[roadmap](docs/ROADMAP.md).
 
 ## Documentation
 
