@@ -2,9 +2,9 @@ import { pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { recordings } from "./recordings.js";
 
 /**
- * Failure here is non-fatal to the recording (DECISIONS.md: "Transcription
- * is optional and disableable, and its failure is non-fatal"), which is
- * why it is its own table rather than a column group on `recordings` —
+ * Transcription is optional, can be disabled entirely, and its failure is
+ * non-fatal to the recording — which is why it is its own table rather
+ * than a column group on `recordings`:
  * a recording with no transcript row, or one stuck at "failed", is still
  * a completely normal, playable recording.
  */
