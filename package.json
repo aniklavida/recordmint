@@ -13,7 +13,8 @@
     "typecheck": "pnpm -r --if-present run typecheck",
     "test": "pnpm -r --if-present run test",
     "dep-check": "dependency-cruiser --config .dependency-cruiser.cjs packages/recorder/src",
-    "e2e": "playwright test --config e2e/playwright.config.ts"
+    "e2e": "playwright test --config e2e/playwright.config.ts",
+    "check-licenses": "node scripts/check-licenses.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.12.0",
