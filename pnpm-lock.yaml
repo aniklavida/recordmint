@@ -104,6 +104,9 @@ importers:
         specifier: ^3.4.4
         version: 3.4.9
     devDependencies:
+      '@recordmint/shared':
+        specifier: workspace:*
+        version: link:../shared
       drizzle-kit:
         specifier: ^0.24.2
         version: 0.24.2
