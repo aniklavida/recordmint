@@ -42,4 +42,10 @@ describe("toRecordingDTO", () => {
     expect(toRecordingDTO(BASE_RECORDING).hasPoster).toBe(true);
     expect(toRecordingDTO({ ...BASE_RECORDING, posterKey: null }).hasPoster).toBe(false);
   });
+
+  it("omits viewCount entirely unless the caller supplies one — no default that could look like a real count", () => {
+    expect(toRecordingDTO(BASE_RECORDING)).not.toHaveProperty("viewCount");
+    expect(toRecordingDTO(BASE_RECORDING, {}).viewCount).toBeUndefined();
+    expect(toRecordingDTO(BASE_RECORDING, { viewCount: 7 }).viewCount).toBe(7);
+  });
 });
