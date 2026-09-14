@@ -5,7 +5,7 @@ import * as schema from "../schema/index.js";
 type OrmClient = PostgresJsDatabase<typeof schema>;
 
 /**
- * Retention is a cost control (SPEC.md §14): a workspace with a
+ * Retention is a cost control (SPEC.md §6, §20): a workspace with a
  * `retentionDays` policy loses `ready` recordings older than that many
  * days. A `null` policy (the default) never matches — "keep forever" is
  * not expressed as a very large number, it is expressed as no row coming

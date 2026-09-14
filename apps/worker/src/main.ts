@@ -58,7 +58,7 @@ async function main(): Promise<void> {
     console.log("TRANSCRIPTION_ENABLED is not \"true\" — the transcript queue is not started. Every other capability still works.");
   }
 
-  // Retention (SPEC.md §14) runs on its own schedule rather than being
+  // Retention (SPEC.md §6, §20) runs on its own schedule rather than being
   // enqueued per recording — it is a sweep over every workspace, not a
   // per-recording job. pg-boss's own `schedule` needs the queue to exist
   // first, same as any other.

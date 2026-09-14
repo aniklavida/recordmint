@@ -9,7 +9,7 @@ const ffmpegAvailable = spawnSync("ffmpeg", ["-version"]).status === 0;
 
 /**
  * Runs ffmpeg for real — the binary is a required part of this project's
- * own stack (SPEC.md §9's "ffmpeg stays, demoted"), not an optional test
+ * own stack (SPEC.md §7: "ffmpeg is still present, but demoted"), not an optional test
  * dependency, so there is no honest way to fake this. Skips only on a
  * machine where ffmpeg genuinely is not installed, matching every other
  * conditionally-skipped live test in this repository.

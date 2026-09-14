@@ -18,9 +18,10 @@ export interface RetentionSweepResult {
 }
 
 /**
- * SPEC.md §14: "retention sweeps and abandoned-upload cleanup... exist in
- * v1 rather than being promised." Two independent passes, run every time
- * this job fires (see `main.ts`'s cron schedule):
+ * SPEC.md §20: "retention policy and optional recompression are the
+ * answer, and they ship in v1 rather than being promised." Two
+ * independent passes, run every time this job fires (see `main.ts`'s
+ * cron schedule):
  *
  * 1. A workspace's `retentionDays` policy has been outlived by a `ready`
  *    recording — delete its objects, then its row (packages/storage's

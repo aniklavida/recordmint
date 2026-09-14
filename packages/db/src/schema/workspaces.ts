@@ -6,7 +6,7 @@ import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
  * allowed to use to decide whether a caller may see into one — see
  * `../queries/recordings.ts` for the enforcement.
  *
- * `retentionDays` is a cost control, not a feature (SPEC.md §11, §14):
+ * `retentionDays` is a cost control, not a feature (SPEC.md §6, §20):
  * storage is the running cost of a self-hosted video tool, and a sweep
  * that never runs is how that cost quietly becomes unbounded. `null`
  * means "keep forever" — the safe default until an owner opts into a

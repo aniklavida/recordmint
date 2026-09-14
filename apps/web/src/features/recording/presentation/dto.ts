@@ -1,0 +1,33 @@
+import type { recordings } from "@recordmint/db";
+
+type RecordingRow = typeof recordings.$inferSelect;
+
+/**
+ * The library and rename/visibility endpoints must never echo
+ * `passwordHash` or the raw `objectKey`/`uploadId` back to a client —
+ * none of the three is something a browser needs, and the first is a
+ * credential. Every route that returns a recording to the client goes
+ * through this rather than serializing the row directly.
+ */
+export function toRecordingDTO(recording: RecordingRow) {
+  return {
+    id: recording.id,
+    publicId: recording.publicId,
+    workspaceId: recording.workspaceId,
+    creatorId: recording.creatorId,
+    title: recording.title,
+    description: recording.description,
+    status: recording.status,
+    failureReason: recording.failureReason,
+    visibility: recording.visibility,
+    hasPassword: recording.passwordHash !== null,
+    expiresAt: recording.expiresAt,
+    guestCommentingEnabled: recording.guestCommentingEnabled,
+    container: recording.container,
+    durationSeconds: recording.durationSeconds,
+    sizeBytes: recording.sizeBytes,
+    hasPoster: recording.posterKey !== null,
+    createdAt: recording.createdAt,
+    updatedAt: recording.updatedAt,
+  };
+}
