@@ -147,6 +147,27 @@ describe.skipIf(!process.env.S3_ENDPOINT)("packages/storage against live S3-comp
     expect(fullResponse.status).toBe(200);
   }, 30_000);
 
+  it("signs a download disposition that the store actually honours", async () => {
+    const recordingId = `live-test-${Date.now()}-download`;
+    const key = originalKey(recordingId, "bin");
+    createdKeys.push(key);
+    await client.send(new PutObjectCommand({ Bucket: config.bucket, Key: key, Body: Buffer.from("original bytes") }));
+
+    const inlineUrl = await presignRead(client, { bucket: config.bucket, key, authorize: allow });
+    const inlineResponse = await fetch(inlineUrl);
+    expect(inlineResponse.headers.get("content-disposition")).toBeNull();
+
+    const downloadUrl = await presignRead(client, {
+      bucket: config.bucket,
+      key,
+      authorize: allow,
+      responseContentDisposition: 'attachment; filename="original.bin"',
+    });
+    const downloadResponse = await fetch(downloadUrl);
+    expect(downloadResponse.status).toBe(200);
+    expect(downloadResponse.headers.get("content-disposition")).toBe('attachment; filename="original.bin"');
+  }, 30_000);
+
   it("rejects a presigned URL once it has actually expired", async () => {
     const recordingId = `live-test-${Date.now()}-expiry`;
     const key = originalKey(recordingId, "bin");

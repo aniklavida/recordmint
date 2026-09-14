@@ -24,6 +24,16 @@ export interface PresignReadOptions {
    * own knowledge.
    */
   authorize: AuthorizationCheck;
+  /**
+   * Signs a `response-content-disposition` query parameter into the URL —
+   * this is what turns "play inline" into "download as a file", without a
+   * second copy of the object or a proxying route. `attachment; filename="..."`
+   * for a real download; omitted (the default) leaves the object's own
+   * disposition, which is inline playback. Part of the signed query string,
+   * so — like the rest of a SigV4-signed GET — it cannot be swapped for a
+   * different filename after the fact without invalidating the signature.
+   */
+  responseContentDisposition?: string;
 }
 
 /**
@@ -48,7 +58,11 @@ export async function presignRead(
   options: PresignReadOptions,
 ): Promise<string> {
   await assertAuthorized(options.authorize);
-  const command = new GetObjectCommand({ Bucket: options.bucket, Key: options.key });
+  const command = new GetObjectCommand({
+    Bucket: options.bucket,
+    Key: options.key,
+    ResponseContentDisposition: options.responseContentDisposition,
+  });
   return getSignedUrl(client, command, {
     expiresIn: resolvePresignTtlSeconds(options.expiresInSeconds, DEFAULT_READ_URL_TTL_SECONDS),
   });
