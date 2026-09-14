@@ -1,5 +1,6 @@
 import PgBoss from "pg-boss";
 import { QUEUE_NAMES, runMigrations } from "@recordmint/db";
+import { runCommentNotificationJob, type CommentNotificationJobData } from "./jobs/comment-notification.js";
 import { runRetentionSweep } from "./jobs/retention.js";
 import { runThumbnailJob, type ThumbnailJobData } from "./jobs/thumbnail.js";
 import { runTranscriptJob, type TranscriptJobData } from "./jobs/transcript.js";
@@ -41,6 +42,22 @@ async function main(): Promise<void> {
     }
   });
 
+  // Registered unconditionally, unlike transcription: a new-comment email
+  // is core to the comments feature, not an optional CPU-heavy add-on a
+  // small self-hoster might reasonably disable.
+  await boss.createQueue(`${QUEUE_NAMES.commentNotification}-dead-letter`);
+  await boss.createQueue(QUEUE_NAMES.commentNotification, {
+    name: QUEUE_NAMES.commentNotification,
+    retryLimit: 3,
+    retryBackoff: true,
+    deadLetter: `${QUEUE_NAMES.commentNotification}-dead-letter`,
+  });
+  await boss.work<CommentNotificationJobData>(QUEUE_NAMES.commentNotification, async (jobs) => {
+    for (const job of jobs) {
+      await runCommentNotificationJob(job.data);
+    }
+  });
+
   if (transcriptionEnabled) {
     await boss.createQueue(`${QUEUE_NAMES.transcript}-dead-letter`);
     await boss.createQueue(QUEUE_NAMES.transcript, {
@@ -72,7 +89,7 @@ async function main(): Promise<void> {
   await boss.schedule(QUEUE_NAMES.retentionSweep, "0 * * * *"); // hourly
 
   console.log(
-    `RecordMint worker ready. Queues: ${QUEUE_NAMES.thumbnail}, ${QUEUE_NAMES.retentionSweep}` +
+    `RecordMint worker ready. Queues: ${QUEUE_NAMES.thumbnail}, ${QUEUE_NAMES.retentionSweep}, ${QUEUE_NAMES.commentNotification}` +
       (transcriptionEnabled ? `, ${QUEUE_NAMES.transcript}` : " (transcription disabled)"),
   );
 
