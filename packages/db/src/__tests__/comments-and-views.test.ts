@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "../client.js";
 import { runMigrations } from "../migrate.js";
 import { createComment, listCommentsForRecording } from "../queries/comments.js";
-import { countViewsForRecording, recordView } from "../queries/views.js";
+import { countViewsForRecording, countViewsForRecordings, recordView } from "../queries/views.js";
 import * as schema from "../schema/index.js";
 
 describe.skipIf(!process.env.DATABASE_URL)("comments and view events", () => {
@@ -12,6 +12,7 @@ describe.skipIf(!process.env.DATABASE_URL)("comments and view events", () => {
   const workspaceId = generateId();
   const userId = generateId();
   const recordingId = generateId();
+  const secondRecordingId = generateId();
 
   beforeAll(async () => {
     db = createDb({ connectionString: process.env.DATABASE_URL! });
@@ -25,6 +26,14 @@ describe.skipIf(!process.env.DATABASE_URL)("comments and view events", () => {
       creatorId: userId,
       title: "A recording with comments",
       objectKey: `recordings/${recordingId}/original.mp4`,
+    });
+    await db.orm.insert(schema.recordings).values({
+      id: secondRecordingId,
+      publicId: generatePublicId(),
+      workspaceId,
+      creatorId: userId,
+      title: "A second recording, never viewed",
+      objectKey: `recordings/${secondRecordingId}/original.mp4`,
     });
   });
 
@@ -87,5 +96,12 @@ describe.skipIf(!process.env.DATABASE_URL)("comments and view events", () => {
     await recordView(db.orm, { id: generateId(), recordingId, viewerUserId: userId });
     await recordView(db.orm, { id: generateId(), recordingId, viewerUserId: null }); // anonymous share-link viewer
     expect(await countViewsForRecording(db.orm, recordingId)).toBe(2);
+  });
+
+  it("counts multiple recordings in one grouped query, for the library list's per-row view count", async () => {
+    const counts = await countViewsForRecordings(db.orm, [recordingId, secondRecordingId]);
+    expect(counts.get(recordingId)).toBe(2); // from the previous test's two recorded views
+    expect(counts.has(secondRecordingId)).toBe(false); // never viewed — no row, not a zero row
+    expect(await countViewsForRecordings(db.orm, [])).toEqual(new Map());
   });
 });

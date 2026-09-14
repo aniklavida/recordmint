@@ -62,7 +62,7 @@ export {
   resolveReactorKey,
 } from "./reactions.js";
 export type { NewReaction } from "./reactions.js";
-export { recordView, countViewsForRecording } from "./views.js";
+export { recordView, countViewsForRecording, countViewsForRecordings } from "./views.js";
 export { getTranscriptForRecording, upsertTranscript } from "./transcripts.js";
 export type { UpsertTranscriptInput } from "./transcripts.js";
 export { listRecordingsPastRetention, listAbandonedUploads } from "./retention.js";
