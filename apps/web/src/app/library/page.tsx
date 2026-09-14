@@ -1,4 +1,4 @@
-import { listWorkspacesForUser } from "@recordmint/db";
+import { listWorkspacesForUser, recordingVisibilityEnum } from "@recordmint/db";
 import { getCurrentUser } from "../../auth/session";
 import { LibraryList } from "../../features/recording/presentation/LibraryList";
 import { getDb } from "../../lib/db";
@@ -65,6 +65,7 @@ export default async function LibraryPage({ searchParams }: PageProps) {
         membershipRole={selected.role}
         currentUserId={user.id}
         initialRetentionDays={selected.workspace.retentionDays}
+        visibilityOptions={recordingVisibilityEnum.enumValues}
       />
     </main>
   );

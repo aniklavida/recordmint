@@ -50,8 +50,14 @@ export function InProgress({ publicId, title, isAuthenticated }: { publicId: str
         posterUrl={ready.posterUrl}
         captionsSrc={ready.transcriptUrl}
         title={ready.recording.title}
+        description={ready.recording.description}
         guestCommentingEnabled={ready.guestCommentingEnabled}
         isAuthenticated={isAuthenticated}
+        // This poll hits the public, unauthenticated resolver route — it
+        // never carries membership or role, so neither the view count
+        // nor the edit control is available until the page is reloaded.
+        viewCount={null}
+        settings={null}
       />
     );
   }

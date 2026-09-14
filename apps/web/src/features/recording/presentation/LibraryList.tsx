@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { RecordingSettings, type RecordingSettingsUpdate } from "./RecordingSettings";
 
 export interface LibraryRecording {
   id: string;
@@ -11,8 +12,18 @@ export interface LibraryRecording {
   status: "uploading" | "ready" | "failed";
   failureReason: string | null;
   visibility: "private" | "unlisted" | "password" | "expiring";
+  hasPassword: boolean;
+  expiresAt: string | null;
   durationSeconds: number | null;
   createdAt: string;
+  /**
+   * The workspace's own view count for this recording — always present
+   * because `GET /api/recordings` only ever returns rows to a caller it
+   * has already proven is a workspace member (SPEC.md §6's per-recording
+   * view log, surfaced as a plain count). There is no anonymous path
+   * through this component at all.
+   */
+  viewCount: number;
 }
 
 type SortKey = "newest" | "oldest" | "title" | "duration";
@@ -62,11 +73,14 @@ export function LibraryList({
   membershipRole,
   currentUserId,
   initialRetentionDays,
+  visibilityOptions,
 }: {
   workspaceId: string;
   membershipRole: "owner" | "member" | "viewer";
   currentUserId: string;
   initialRetentionDays: number | null;
+  /** The recording_visibility enum's own values, read from the schema by the server page — never a second, hand-kept list. */
+  visibilityOptions: readonly string[];
 }) {
   const [recordings, setRecordings] = useState<LibraryRecording[] | null>(null);
   const [query, setQuery] = useState("");
@@ -93,8 +107,27 @@ export function LibraryList({
 
   const sorted = useMemo(() => sortRecordings(recordings ?? [], sortKey), [recordings, sortKey]);
 
-  function canDelete(recording: LibraryRecording): boolean {
+  /** The same rule the PATCH/DELETE endpoints enforce server-side: the recording's creator, or a workspace owner. */
+  function canEditRecording(recording: LibraryRecording): boolean {
     return membershipRole === "owner" || recording.creatorId === currentUserId;
+  }
+
+  function handleSettingsUpdated(recordingId: string, update: RecordingSettingsUpdate): void {
+    setRecordings((previous) =>
+      (previous ?? []).map((recording) =>
+        recording.id === recordingId
+          ? {
+              ...recording,
+              ...(update.title !== undefined ? { title: update.title } : {}),
+              ...(update.visibility !== undefined
+                ? { visibility: update.visibility as LibraryRecording["visibility"] }
+                : {}),
+              ...(update.hasPassword !== undefined ? { hasPassword: update.hasPassword } : {}),
+              ...(update.expiresAt !== undefined ? { expiresAt: update.expiresAt } : {}),
+            }
+          : recording,
+      ),
+    );
   }
 
   function handleDelete(recording: LibraryRecording): void {
@@ -190,12 +223,26 @@ export function LibraryList({
               <a href={`/v/${recording.publicId}`}>{recording.title}</a>
               <p>
                 {statusLabel(recording)} · {formatDuration(recording.durationSeconds)} · {recording.visibility} ·{" "}
-                {formatDate(recording.createdAt)}
+                {formatDate(recording.createdAt)} · {recording.viewCount} view{recording.viewCount === 1 ? "" : "s"}
               </p>
-              {canDelete(recording) ? (
-                <button type="button" onClick={() => handleDelete(recording)} disabled={deletingId === recording.id}>
-                  {deletingId === recording.id ? "Deleting…" : "Delete"}
-                </button>
+              {canEditRecording(recording) ? (
+                <>
+                  <details>
+                    <summary>Edit</summary>
+                    <RecordingSettings
+                      recordingId={recording.id}
+                      title={recording.title}
+                      visibility={recording.visibility}
+                      hasPassword={recording.hasPassword}
+                      expiresAt={recording.expiresAt}
+                      visibilityOptions={visibilityOptions}
+                      onUpdated={(update) => handleSettingsUpdated(recording.id, update)}
+                    />
+                  </details>
+                  <button type="button" onClick={() => handleDelete(recording)} disabled={deletingId === recording.id}>
+                    {deletingId === recording.id ? "Deleting…" : "Delete"}
+                  </button>
+                </>
               ) : null}
             </li>
           ))}

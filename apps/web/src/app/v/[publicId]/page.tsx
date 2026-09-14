@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getMembership, getRecordingByPublicId, recordingVisibilityEnum } from "@recordmint/db";
 import { getCurrentUser } from "../../../auth/session";
+import { getViewCountForMember } from "../../../features/playback/application/view-count";
 import { resolveForViewer } from "../../../features/playback/application/resolve";
 import { InProgress } from "../../../features/playback/presentation/InProgress";
 import { PasswordGate } from "../../../features/playback/presentation/PasswordGate";
 import { RecordingViewer } from "../../../features/playback/presentation/RecordingViewer";
+import { getDb } from "../../../lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -69,18 +72,58 @@ export default async function PlayerPage({ params }: PageProps) {
     );
   }
 
+  // Beyond this point the recording is "ready" and a full row lookup is
+  // cheap to justify: it only ever runs for a signed-in viewer, and only
+  // to decide two members-only things — whether this viewer may edit the
+  // recording, and whether to show its view count. A guest never reaches
+  // this branch, so a guest never causes this query at all.
+  let canEdit = false;
+  let viewCount: number | null = null;
+  let settingsProps: { visibility: string; hasPassword: boolean; expiresAt: string | null } | null = null;
+
+  if (user) {
+    const recordingRow = await getRecordingByPublicId(getDb().orm, params.publicId);
+    if (recordingRow) {
+      const membership = await getMembership(getDb().orm, { workspaceId: recordingRow.workspaceId, userId: user.id });
+      canEdit = Boolean(membership && (membership.role === "owner" || recordingRow.creatorId === user.id));
+      if (canEdit) {
+        settingsProps = {
+          visibility: recordingRow.visibility,
+          hasPassword: recordingRow.passwordHash !== null,
+          expiresAt: recordingRow.expiresAt ? recordingRow.expiresAt.toISOString() : null,
+        };
+      }
+      viewCount = await getViewCountForMember({
+        workspaceId: recordingRow.workspaceId,
+        recordingId: recordingRow.id,
+        viewerUserId: user.id,
+      });
+    }
+  }
+
   return (
     <main>
-      <h1>{resolution.recording.title}</h1>
-      {resolution.recording.description ? <p>{resolution.recording.description}</p> : null}
       <RecordingViewer
         publicId={params.publicId}
         playUrl={resolution.playUrl}
         posterUrl={resolution.posterUrl}
         captionsSrc={resolution.transcriptUrl}
         title={resolution.recording.title}
+        description={resolution.recording.description}
         guestCommentingEnabled={resolution.guestCommentingEnabled}
         isAuthenticated={Boolean(user)}
+        viewCount={viewCount}
+        settings={
+          settingsProps
+            ? {
+                recordingId: resolution.recording.id,
+                visibility: settingsProps.visibility,
+                hasPassword: settingsProps.hasPassword,
+                expiresAt: settingsProps.expiresAt,
+                visibilityOptions: recordingVisibilityEnum.enumValues,
+              }
+            : null
+        }
       />
     </main>
   );

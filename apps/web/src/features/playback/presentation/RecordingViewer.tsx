@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CommentsPanel } from "../../comments/presentation/CommentsPanel";
 import { ReactionBar } from "../../reactions/presentation/ReactionBar";
+import { RecordingSettings } from "../../recording/presentation/RecordingSettings";
 import { TranscriptSearch } from "../../transcripts/presentation/TranscriptSearch";
 import { VideoPlayer } from "./VideoPlayer";
 
@@ -18,19 +19,40 @@ export function RecordingViewer({
   posterUrl,
   captionsSrc,
   title,
+  description,
   guestCommentingEnabled,
   isAuthenticated,
+  viewCount,
+  settings,
 }: {
   publicId: string;
   playUrl: string;
   posterUrl: string | null;
   captionsSrc: string | null;
   title: string;
+  description: string | null;
   guestCommentingEnabled: boolean;
   isAuthenticated: boolean;
+  /** The workspace's view count for this recording, or null when the viewer is not a workspace member — never rendered for a guest. */
+  viewCount: number | null;
+  /**
+   * Present only when this viewer may edit this recording (the creator
+   * or a workspace owner) — absent for everyone else, including a
+   * guest. Plain data only: a Server Component cannot hand a function
+   * prop across to a Client Component, so the update callback is built
+   * here rather than passed in from the page.
+   */
+  settings: {
+    recordingId: string;
+    visibility: string;
+    hasPassword: boolean;
+    expiresAt: string | null;
+    visibilityOptions: readonly string[];
+  } | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentTimeSeconds, setCurrentTimeSeconds] = useState(0);
+  const [liveTitle, setLiveTitle] = useState(title);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -56,7 +78,28 @@ export function RecordingViewer({
 
   return (
     <div ref={containerRef} className="recording-viewer">
-      <VideoPlayer src={playUrl} poster={posterUrl} captionsSrc={captionsSrc} title={title} />
+      <h1>{liveTitle}</h1>
+      {description ? <p>{description}</p> : null}
+      {/* Never rendered for a guest — resolved server-side to null before this component ever mounts for one. */}
+      {viewCount !== null ? (
+        <p className="recording-view-count">
+          {viewCount} view{viewCount === 1 ? "" : "s"}
+        </p>
+      ) : null}
+      <VideoPlayer src={playUrl} poster={posterUrl} captionsSrc={captionsSrc} title={liveTitle} />
+      {settings ? (
+        <RecordingSettings
+          recordingId={settings.recordingId}
+          title={liveTitle}
+          visibility={settings.visibility}
+          hasPassword={settings.hasPassword}
+          expiresAt={settings.expiresAt}
+          visibilityOptions={settings.visibilityOptions}
+          onUpdated={(update) => {
+            if (update.title !== undefined) setLiveTitle(update.title);
+          }}
+        />
+      ) : null}
       <ReactionBar
         publicId={publicId}
         guestCommentingEnabled={guestCommentingEnabled}

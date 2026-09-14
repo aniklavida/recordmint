@@ -151,3 +151,19 @@ button {
 .comments-panel p {
   overflow-wrap: anywhere;
 }
+
+.recording-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.recording-settings-warning {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  padding: 0.75rem;
+}

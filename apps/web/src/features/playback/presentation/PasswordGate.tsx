@@ -50,8 +50,14 @@ export function PasswordGate({
         posterUrl={payload.posterUrl}
         captionsSrc={payload.transcriptUrl}
         title={payload.recording.title}
+        description={payload.recording.description}
         guestCommentingEnabled={payload.guestCommentingEnabled}
         isAuthenticated={isAuthenticated}
+        // Unlocked via the public resolver route, same as InProgress —
+        // no membership context available client-side, so no view count
+        // or edit control until the page is reloaded.
+        viewCount={null}
+        settings={null}
       />
     );
   }
