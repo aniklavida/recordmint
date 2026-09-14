@@ -1,9 +1,9 @@
 import { generateId } from "@recordmint/shared";
 import { createSession, createUser, findUserById, getSessionWithUser } from "@recordmint/db";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { CapturingMailTransport } from "@recordmint/shared/mail";
 import { hashPassword, verifyPassword } from "../../../../auth/password.js";
 import { getDb } from "../../../../lib/db.js";
-import { CapturingMailTransport } from "../../../../lib/mail.js";
 import { confirmPasswordReset, requestPasswordReset } from "../password-reset.js";
 
 /**

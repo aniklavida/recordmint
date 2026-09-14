@@ -11,9 +11,9 @@ import {
   markPasswordResetTokenUsed,
   updateUserPassword,
 } from "@recordmint/db";
+import { getMailTransport, type MailTransport } from "@recordmint/shared/mail";
 import { hashPassword } from "../../../auth/password";
 import { getDb } from "../../../lib/db";
-import { getMailTransport, type MailTransport } from "../../../lib/mail";
 
 /**
  * [assumed] One hour — long enough to receive and open an email, short

@@ -1,15 +1,22 @@
 import nodemailer, { type Transporter } from "nodemailer";
 
 /**
- * The one shape every part of the app sends mail through. A password
- * reset link is a credential, so the interface stays intentionally
- * narrow — `to`/`subject`/`text` only, plain text, nothing that invites a
- * caller to compose HTML containing the link twice (once in a visible
- * href, once in tracking-pixel-adjacent markup a mail client might log).
+ * The one shape every part of the product sends mail through — the web
+ * app (password reset) and the worker (new-comment notifications) alike,
+ * which is why this lives in `packages/shared` rather than under a
+ * single app. A password reset link is a credential, so the interface
+ * stays intentionally narrow — `to`/`subject`/`text` only, plain text,
+ * nothing that invites a caller to compose HTML containing a link twice
+ * (once in a visible href, once in tracking-pixel-adjacent markup a mail
+ * client might log).
  *
  * `SmtpMailTransport` is the only production implementation; tests
- * substitute `CapturingMailTransport` so a password-reset test never
- * opens a real network connection or sends a real email.
+ * substitute `CapturingMailTransport` so a test never opens a real
+ * network connection or sends a real email.
+ *
+ * A separate subpath export (`./mail`, not the package root) for the
+ * same reason `./vtt` is one: nothing that imports the shared package's
+ * root barrel should have to pull `nodemailer` in along with it.
  */
 export interface MailMessage {
   to: string;
@@ -76,7 +83,8 @@ export class SmtpMailTransport implements MailTransport {
  * just remembers every message so a test can inspect it directly instead
  * of intercepting SMTP traffic. Exported from the production module
  * (rather than a separate test-support file) because it is inert unless a
- * test constructs and injects it — nothing in the app wires it up itself.
+ * test constructs and injects it — nothing in either app wires it up
+ * itself.
  */
 export class CapturingMailTransport implements MailTransport {
   readonly sent: MailMessage[] = [];
@@ -88,7 +96,7 @@ export class CapturingMailTransport implements MailTransport {
 
 let transport: MailTransport | undefined;
 
-/** One transport per process, built from the environment on first use — mirrors `lib/db.ts`'s `getDb()`. */
+/** One transport per process, built from the environment on first use — mirrors `lib/db.ts`'s `getDb()` in both apps. */
 export function getMailTransport(): MailTransport {
   transport ??= new SmtpMailTransport(loadSmtpConfigFromEnv());
   return transport;
