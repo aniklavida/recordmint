@@ -18,3 +18,15 @@ export interface QueueConfig {
 export function createQueue(config: QueueConfig): PgBoss {
   return new PgBoss(config.connectionString);
 }
+
+/**
+ * The queue names both `apps/web` (enqueueing, once uploads exist) and
+ * `apps/worker` (consuming) have to agree on. One shared list so the two
+ * processes cannot drift into subscribing to a name nobody ever sends to,
+ * or sending to a name nobody ever works.
+ */
+export const QUEUE_NAMES = {
+  transcript: "recordmint-transcript",
+  thumbnail: "recordmint-thumbnail",
+  retentionSweep: "recordmint-retention-sweep",
+} as const;

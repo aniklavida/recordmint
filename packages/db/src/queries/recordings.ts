@@ -103,6 +103,30 @@ export async function getRecordingForPublicLink(
 }
 
 /**
+ * A plain lookup by internal id, no visibility or membership rule
+ * applied — for trusted, non-request-driven callers only (the worker's
+ * own jobs, which run with no caller identity to check against). Never
+ * expose this to anything reachable from an HTTP request.
+ */
+export async function getRecordingById(orm: OrmClient, recordingId: string) {
+  const rows = await orm.select().from(schema.recordings).where(eq(schema.recordings.id, recordingId)).limit(1);
+  return rows[0] ?? null;
+}
+
+/**
+ * The one unfiltered lookup by public id — no visibility rule applied.
+ * Exists for the player page's own authorization logic, which has to
+ * treat `private` differently for a workspace member than for an
+ * anonymous visitor and so cannot use `getRecordingForPublicLink`'s
+ * blanket exclusion. Callers of this function are themselves the
+ * access-control boundary; it does not double as one.
+ */
+export async function getRecordingByPublicId(orm: OrmClient, publicId: string) {
+  const rows = await orm.select().from(schema.recordings).where(eq(schema.recordings.publicId, publicId)).limit(1);
+  return rows[0] ?? null;
+}
+
+/**
  * The recording library's search: title, or — when transcription produced
  * one — the transcript's plain text. A workspace with transcription
  * switched off simply never matches on the second clause, since
@@ -175,4 +199,14 @@ export async function updateRecordingMetadata(
  */
 export async function deleteRecordingRow(orm: OrmClient, recordingId: string): Promise<void> {
   await orm.delete(schema.recordings).where(eq(schema.recordings.id, recordingId));
+}
+
+/** Worker-only: records where the poster frame the thumbnail job produced actually landed. Not part of `RecordingMetadataPatch` — a viewer never sets this directly. */
+export async function setRecordingPosterKey(orm: OrmClient, recordingId: string, posterKey: string) {
+  const rows = await orm
+    .update(schema.recordings)
+    .set({ posterKey, updatedAt: new Date() })
+    .where(eq(schema.recordings.id, recordingId))
+    .returning();
+  return rows[0] ?? null;
 }
