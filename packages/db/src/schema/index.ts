@@ -16,5 +16,6 @@ export * from "./recordings.js";
 export * from "./parts.js";
 export * from "./comments.js";
 export * from "./reactions.js";
+export * from "./notification-settings.js";
 export * from "./transcripts.js";
 export * from "./views.js";

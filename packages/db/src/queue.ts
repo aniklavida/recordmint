@@ -29,4 +29,5 @@ export const QUEUE_NAMES = {
   transcript: "recordmint-transcript",
   thumbnail: "recordmint-thumbnail",
   retentionSweep: "recordmint-retention-sweep",
+  commentNotification: "recordmint-comment-notification",
 } as const;
