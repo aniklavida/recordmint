@@ -20,6 +20,14 @@ export const transcripts = pgTable("transcripts", {
   language: text("language"),
   /** packages/storage's `transcriptKey(recordingId)`, once the WebVTT file exists. */
   objectKey: text("object_key"),
+  /**
+   * Plain concatenated text of every cue, written alongside the WebVTT
+   * file. This is what the recording library's search matches against —
+   * search *within* one recording instead parses the WebVTT cues on
+   * demand for their timestamps, so this column only has to answer
+   * "does this recording mention X", not "where".
+   */
+  text: text("text"),
   errorMessage: text("error_message"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

@@ -9,6 +9,7 @@ export * from "./users.js";
 export * from "./sessions.js";
 export * from "./workspaces.js";
 export * from "./memberships.js";
+export * from "./invitations.js";
 export * from "./recordings.js";
 export * from "./parts.js";
 export * from "./comments.js";

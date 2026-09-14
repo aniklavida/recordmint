@@ -8,6 +8,13 @@
       "when": 1789262903816,
       "tag": "0000_good_reaper",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789344602189,
+      "tag": "0001_amazing_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }

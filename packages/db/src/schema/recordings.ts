@@ -1,4 +1,4 @@
-import { bigint, index, pgEnum, pgTable, real, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, boolean, index, pgEnum, pgTable, real, text, timestamp } from "drizzle-orm/pg-core";
 import { users } from "./users.js";
 import { workspaces } from "./workspaces.js";
 
@@ -58,6 +58,16 @@ export const recordings = pgTable(
     passwordHash: text("password_hash"),
     /** Hard cutoff. Only meaningful when visibility is "expiring". */
     expiresAt: timestamp("expires_at", { withTimezone: true }),
+
+    /**
+     * SPEC.md §13: guest commenting on a shared link is per-recording and
+     * off unless deliberately enabled, because a public link with open
+     * commenting is a spam target and a self-hosted operator has no
+     * moderation team. `false` is the most restrictive option, and this
+     * column is the one place that default lives — nothing else in the
+     * codebase may decide it independently.
+     */
+    guestCommentingEnabled: boolean("guest_commenting_enabled").notNull().default(false),
 
     /** The uploaded object's key under packages/storage's `recordings/<id>/` prefix. */
     objectKey: text("object_key").notNull(),
