@@ -2,6 +2,7 @@ import { AppError, generateId } from "@recordmint/shared";
 import { createComment, listCommentsForRecording } from "@recordmint/db";
 import { getDb } from "../../../lib/db";
 import { authorizeViewerForRecording } from "../../playback/application/authorize";
+import { enqueueCommentNotification } from "./notify";
 
 export interface AddCommentInput {
   publicId: string;
@@ -48,13 +49,32 @@ export async function addComment(input: AddCommentInput) {
     throw new AppError("VALIDATION_ERROR", "timestampSeconds cannot be negative.");
   }
 
-  return createComment(getDb().orm, {
+  const comment = await createComment(getDb().orm, {
     id: generateId(),
     recordingId: recording.id,
     timestampSeconds: input.timestampSeconds,
     body,
     ...(input.viewerUserId ? { authorUserId: input.viewerUserId } : { guestName: input.guestName!.trim() }),
   });
+
+  // Never notify the recording's creator about their own comment — the
+  // one case this skips outright rather than leaving to the worker job's
+  // own filter, so a self-comment never even creates a queue entry.
+  // Enqueueing (a database insert pg-boss owns) is deliberately never
+  // allowed to fail the comment itself: sending the actual email happens
+  // only in the worker, but even scheduling that job is best-effort here.
+  if (input.viewerUserId !== recording.creatorId) {
+    try {
+      await enqueueCommentNotification(recording.id);
+    } catch (error) {
+      console.error(
+        "Failed to enqueue a new-comment notification:",
+        error instanceof Error ? error.name : "unknown error",
+      );
+    }
+  }
+
+  return comment;
 }
 
 export interface ListCommentsInput {
