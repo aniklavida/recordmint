@@ -42,7 +42,10 @@ export default async function LibraryPage({ searchParams }: PageProps) {
 
   return (
     <main>
-      <h1>Library</h1>
+      <div className="page-header">
+        <h1>Library</h1>
+        <a href="/settings">Settings</a>
+      </div>
       {memberships.length > 1 ? (
         <nav aria-label="Workspaces">
           <ul>
