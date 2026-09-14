@@ -43,6 +43,15 @@ All notable changes to RecordMint are documented here, following [Keep a Changel
   or — only where a recording's owner has explicitly enabled it — a
   guest supplying a display name. Downloading the original file is a
   presigned read with a different disposition, not a separate export.
+- A new-comment email to a recording's own creator, sent through the
+  worker's existing queue rather than inline in the comment request, so a
+  mail outage never fails a comment. Never sent for the creator's own
+  comment; a burst of comments on the same recording within a five-minute
+  window lands in one email, not one per comment; on by default and
+  togglable per user; carries the recording title, the commenter's name
+  (or "a guest"), the comment's timestamp in the video, and a plain link
+  to the player page — never a presigned storage URL, a session or reset
+  token, or the commenter's email address.
 - The worker's thumbnail job (a real `ffmpeg` subprocess extracting a
   poster frame), transcript job (whisper.cpp/faster-whisper on the host;
   a missing binary marks the transcript row `failed` without retrying

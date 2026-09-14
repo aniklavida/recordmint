@@ -34,7 +34,7 @@ Direct production dependencies, by workspace member:
 | Workspace | Dependency | Version (`package.json`) | Licence |
 |---|---|---|---|
 | `apps/web` | `next` | ^14.2.13 | MIT |
-| `apps/web` | `nodemailer` | ^10.0.9 | MIT-0 |
+| `apps/web` | `pg-boss` | ^10.1.5 | MIT |
 | `apps/web` | `react` | ^18.3.1 | MIT |
 | `apps/web` | `react-dom` | ^18.3.1 | MIT |
 | `apps/worker` | `pg-boss` | ^10.1.5 | MIT |
@@ -44,6 +44,7 @@ Direct production dependencies, by workspace member:
 | `packages/storage` | `@aws-sdk/client-s3` | ^3.658.1 | Apache-2.0 |
 | `packages/storage` | `@aws-sdk/s3-request-presigner` | ^3.658.1 | Apache-2.0 |
 | `packages/shared` | `nanoid` | ^5.0.7 | MIT |
+| `packages/shared` | `nodemailer` | ^10.0.9 | MIT-0 |
 | `packages/recorder` | *(none — web platform APIs only)* | — | — |
 
 Full transitive compiled-class tree (package, resolved version, licence), verified 2026-09-13:

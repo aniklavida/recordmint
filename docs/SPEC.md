@@ -210,6 +210,8 @@ Timestamped against the playhead, threaded one level deep, written by a workspac
 
 Comments render as markers on the player timeline; clicking one seeks to that moment.
 
+**A recording's creator can get an email when someone else comments on it** — never for their own comment, and never more than one email per recording within a five-minute window, however many comments land in that window. On by default for the creator, togglable per user. The email carries the recording's title, the commenter's display name (or "a guest"), the comment's timestamp in the video, and a link to the player page — nothing that could act as a credential on its own.
+
 ## 14 · Transcripts
 
 When a recording becomes ready, a transcript job is queued. The worker pulls the object, feeds the audio to whisper.cpp — or faster-whisper where a GPU is configured — and writes WebVTT alongside the video.
