@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+// Plyr's JS replaces the native <video> element with its own custom
+// control markup; without this stylesheet that markup renders unstyled
+// and the control bar is not usable — this was never imported anywhere
+// in the app before, on any screen size.
+import "plyr/dist/plyr.css";
 
 export interface VideoPlayerProps {
   src: string;

@@ -1,3 +1,5 @@
+import "./globals.css";
+
 export const metadata = {
   title: "RecordMint",
   description: "Record in the browser. Share a link. Own the file.",

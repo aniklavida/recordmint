@@ -52,7 +52,7 @@ export function CommentsPanel({
   }, [publicId]);
 
   return (
-    <section aria-label="Comments">
+    <section aria-label="Comments" className="comments-panel">
       <h2>Comments</h2>
       <ol>
         {comments.map((comment) => (

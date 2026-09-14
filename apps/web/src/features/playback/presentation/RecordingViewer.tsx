@@ -54,7 +54,7 @@ export function RecordingViewer({
   }, []);
 
   return (
-    <div ref={containerRef}>
+    <div ref={containerRef} className="recording-viewer">
       <VideoPlayer src={playUrl} poster={posterUrl} captionsSrc={captionsSrc} title={title} />
       {captionsSrc ? <TranscriptSearch transcriptUrl={captionsSrc} /> : null}
       <CommentsPanel

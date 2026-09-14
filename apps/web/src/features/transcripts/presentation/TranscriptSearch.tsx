@@ -36,7 +36,7 @@ export function TranscriptSearch({ transcriptUrl }: { transcriptUrl: string }) {
   const results = query.trim() ? searchCues(cues, query) : [];
 
   return (
-    <section aria-label="Transcript search">
+    <section aria-label="Transcript search" className="transcript-search">
       <label htmlFor="transcript-search">Search this recording</label>
       <input
         id="transcript-search"

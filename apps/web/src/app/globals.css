@@ -1,0 +1,111 @@
+/*
+ * There is no design system in this repository yet (no Tailwind, no
+ * component library — SPEC.md §9 marks that stack as still pending).
+ * This file is deliberately not one: it fixes the concrete ways plain,
+ * unstyled HTML breaks on a phone-width screen — a video wider than the
+ * viewport forcing sideways scroll, a control smaller than a thumb can
+ * reliably hit, a long unbroken word blowing out the layout — without
+ * introducing typography, colour or branding decisions that would count
+ * as a redesign. Every rule below exists to satisfy one of the player
+ * page's own "usable on a phone" requirements, not as a visual choice.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  /* Belt-and-braces against sideways scroll: the rules below should
+     already keep every element within the viewport, but a video or
+     image with an unusually large intrinsic size is exactly the kind of
+     thing that slips through on a page with no other layout rules. */
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+main {
+  /* Full width up to a comfortable reading measure — a video and a
+     paragraph of transcript both stay reachable without a fixed pixel
+     width that would either crowd a 375px viewport or float awkwardly
+     narrow on a desktop-sized one. */
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Plyr's own root element replaces the native <video> in the DOM; the
+   max-width above targets the <video> that no longer renders once Plyr
+   has mounted, so the wrapper needs the same constraint directly. */
+.plyr {
+  max-width: 100%;
+}
+
+.recording-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+  max-width: 100%;
+}
+
+input[type="password"],
+input[type="search"],
+input[type="text"],
+textarea {
+  width: 100%;
+}
+
+textarea {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+/* A touch target smaller than ~44px is the most common reason a control
+   that works fine with a mouse is hard to reach with a thumb. */
+button {
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+}
+
+.comments-panel ol,
+.transcript-search ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* A pasted URL or an unbroken run of characters in a comment or a
+   transcript line is ordinary user content this page cannot control the
+   shape of — it must wrap rather than push the page wider than the
+   screen that is reading it. */
+.comments-panel li,
+.transcript-search li,
+.comments-panel p {
+  overflow-wrap: anywhere;
+}
