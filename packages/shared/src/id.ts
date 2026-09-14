@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { customAlphabet } from "nanoid";
 
 /**
@@ -30,8 +31,24 @@ const nanoidInternalId = customAlphabet(
 /**
  * Generates an internal identifier for rows that are never exposed in a
  * URL (e.g. primary keys referenced only server-side). Not a security
- * boundary — use `generatePublicId` for anything link-shaped.
+ * boundary — use `generatePublicId` for anything link-shaped, or
+ * `generateSecureToken` for anything that is itself a credential.
  */
 export function generateId(): string {
   return nanoidInternalId();
+}
+
+/**
+ * Generates a high-entropy token for something that *is* a credential —
+ * a session cookie value, an invitation link's token. 32 bytes
+ * (256 bits) of `crypto.randomBytes`, base64url-encoded so it drops
+ * straight into a cookie or a URL with no escaping.
+ *
+ * Deliberately a different function from `generatePublicId`: a
+ * recording's `publicId` only has to be hard to enumerate, while a
+ * session id or invitation token is the entire proof of identity behind
+ * it and is held to the higher bar every authentication credential needs.
+ */
+export function generateSecureToken(): string {
+  return randomBytes(32).toString("base64url");
 }

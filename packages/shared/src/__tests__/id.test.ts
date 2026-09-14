@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generatePublicId, generateId } from "../id.js";
+import { generatePublicId, generateId, generateSecureToken } from "../id.js";
 
 describe("generatePublicId", () => {
   it("produces a 12-character URL-safe id", () => {
@@ -19,5 +19,19 @@ describe("generateId", () => {
     const id = generateId();
     expect(id).toHaveLength(20);
     expect(id).toMatch(/^[a-z0-9]+$/);
+  });
+});
+
+describe("generateSecureToken", () => {
+  it("produces a base64url string carrying 32 bytes of entropy", () => {
+    const token = generateSecureToken();
+    // base64url of 32 bytes is 43 characters (no padding).
+    expect(token).toHaveLength(43);
+    expect(token).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
+
+  it("never repeats across a large sample", () => {
+    const tokens = new Set(Array.from({ length: 5000 }, () => generateSecureToken()));
+    expect(tokens.size).toBe(5000);
   });
 });
