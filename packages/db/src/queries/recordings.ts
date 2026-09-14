@@ -1,8 +1,9 @@
-import { and, eq, gt, isNull, ne, or } from "drizzle-orm";
+import { and, eq, gt, ilike, isNull, ne, or } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import * as schema from "../schema/index.js";
 
 type OrmClient = PostgresJsDatabase<typeof schema>;
+type RecordingVisibility = (typeof schema.recordingVisibilityEnum.enumValues)[number];
 
 /**
  * The visibility model, enforced here rather than in the UI: a query must
@@ -99,4 +100,79 @@ export async function getRecordingForPublicLink(
     .limit(1);
 
   return rows[0] ?? null;
+}
+
+/**
+ * The recording library's search: title, or — when transcription produced
+ * one — the transcript's plain text. A workspace with transcription
+ * switched off simply never matches on the second clause, since
+ * `transcripts.text` is never populated; the query does not need a
+ * feature flag of its own to degrade correctly.
+ *
+ * Still membership-gated exactly like `listRecordingsForMember` — search
+ * is a filter on top of "what this caller may already see", never a way
+ * around it.
+ */
+export async function searchRecordingsForMember(
+  orm: OrmClient,
+  params: { workspaceId: string; userId: string; query: string },
+) {
+  const pattern = `%${params.query}%`;
+  const rows = await orm
+    .select({ recording: schema.recordings })
+    .from(schema.recordings)
+    .innerJoin(
+      schema.memberships,
+      eq(schema.memberships.workspaceId, schema.recordings.workspaceId),
+    )
+    .leftJoin(schema.transcripts, eq(schema.transcripts.recordingId, schema.recordings.id))
+    .where(
+      and(
+        eq(schema.recordings.workspaceId, params.workspaceId),
+        eq(schema.memberships.userId, params.userId),
+        or(ilike(schema.recordings.title, pattern), ilike(schema.transcripts.text, pattern)),
+      ),
+    );
+  return rows.map((row) => row.recording);
+}
+
+export interface RecordingMetadataPatch {
+  title?: string;
+  description?: string | null;
+  visibility?: RecordingVisibility;
+  passwordHash?: string | null;
+  expiresAt?: Date | null;
+  guestCommentingEnabled?: boolean;
+}
+
+/**
+ * Renames, re-visibilities or otherwise edits a recording's metadata.
+ * Authorization (is this caller a member, do they own the row or hold
+ * the `owner` role) is the route/application layer's job — every caller
+ * here has already resolved the row via `getRecordingForMember` and knows
+ * it is allowed to touch it.
+ */
+export async function updateRecordingMetadata(
+  orm: OrmClient,
+  recordingId: string,
+  patch: RecordingMetadataPatch,
+) {
+  const rows = await orm
+    .update(schema.recordings)
+    .set({ ...patch, updatedAt: new Date() })
+    .where(eq(schema.recordings.id, recordingId))
+    .returning();
+  return rows[0] ?? null;
+}
+
+/**
+ * Deletes the row only. Removing the objects behind it is
+ * `packages/storage`'s `deleteRecordingObjects` — the caller (the route
+ * handler or the retention job) is expected to delete the objects first
+ * and the row second, so a crash between the two leaves an orphaned row
+ * pointing at nothing rather than an orphaned object nothing points at;
+ * the former is detectable by re-running the delete, the latter is not.
+ */
+export async function deleteRecordingRow(orm: OrmClient, recordingId: string): Promise<void> {
+  await orm.delete(schema.recordings).where(eq(schema.recordings.id, recordingId));
 }
