@@ -7,6 +7,8 @@
  */
 export * from "./users.js";
 export * from "./sessions.js";
+export * from "./password-reset-tokens.js";
+export * from "./login-lockouts.js";
 export * from "./workspaces.js";
 export * from "./memberships.js";
 export * from "./invitations.js";

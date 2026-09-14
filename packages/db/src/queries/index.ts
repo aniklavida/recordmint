@@ -23,8 +23,23 @@ export {
   getSessionWithUser,
   deleteSession,
   deleteExpiredSessions,
+  deleteSessionsForUser,
+  updateUserPassword,
+  createPasswordResetToken,
+  findValidPasswordResetToken,
+  markPasswordResetTokenUsed,
+  invalidateOutstandingPasswordResetTokens,
+  getLoginLockoutStatus,
+  recordFailedLogin,
+  clearLoginLockout,
 } from "./auth.js";
-export type { NewUser, NewSession } from "./auth.js";
+export type {
+  NewUser,
+  NewSession,
+  NewPasswordResetToken,
+  LoginLockoutStatus,
+  LoginLockoutPolicy,
+} from "./auth.js";
 export {
   createWorkspaceWithOwner,
   listWorkspacesForUser,
