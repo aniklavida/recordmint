@@ -15,5 +15,6 @@ export * from "./invitations.js";
 export * from "./recordings.js";
 export * from "./parts.js";
 export * from "./comments.js";
+export * from "./reactions.js";
 export * from "./transcripts.js";
 export * from "./views.js";

@@ -55,6 +55,13 @@ export {
 export type { NewWorkspace, NewInvitation } from "./workspaces.js";
 export { createComment, listCommentsForRecording } from "./comments.js";
 export type { NewComment } from "./comments.js";
+export {
+  createReaction,
+  listReactionsForRecording,
+  countReactionsByReactorSince,
+  resolveReactorKey,
+} from "./reactions.js";
+export type { NewReaction } from "./reactions.js";
 export { recordView, countViewsForRecording } from "./views.js";
 export { getTranscriptForRecording, upsertTranscript } from "./transcripts.js";
 export type { UpsertTranscriptInput } from "./transcripts.js";
