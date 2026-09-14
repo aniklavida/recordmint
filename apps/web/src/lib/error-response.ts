@@ -9,6 +9,7 @@ const STATUS_BY_CODE: Record<string, number> = {
   NOT_FOUND: 404,
   VALIDATION_ERROR: 400,
   CONFLICT: 409,
+  RATE_LIMITED: 429,
 };
 
 /**
