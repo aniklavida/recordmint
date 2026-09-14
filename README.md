@@ -6,7 +6,7 @@ RecordMint is free, self-hosted, open-source video messaging. You open a web pag
 
 Nothing to install. No vendor account. No storage you do not control.
 
-> **Pre-implementation.** This repository currently contains the product specification, architecture and structure. **There is no working release yet.** Every capability below is planned unless explicitly marked implemented.
+> **Early development. There is no working release yet.** Accounts, workspaces, the recording library, the player page, comments and the background worker (thumbnails, retention, and the plumbing for host-run transcription) are implemented and tested against a real database. Browser capture and upload — the part that actually produces a recording — is not built yet, so nothing can be recorded through the product today. Every capability below is planned unless explicitly marked implemented.
 
 ## The idea
 
@@ -46,8 +46,11 @@ The browser extension is a later convenience, not a missing piece — the web ap
 
 ## Development
 
-The monorepo skeleton and local infrastructure exist; recording, upload and
-playback do not yet. There is nothing to demo.
+Accounts, workspaces, the recording library, the player page and comments
+run against a real Postgres and S3-compatible storage, each with automated
+tests to prove it. What is missing is the part that actually makes a
+recording: browser capture and the upload that turns it into a share link.
+There is nothing to demo end to end yet.
 
 ```
 cp .env.example .env   # for a real deployment — docker compose up below needs no setup
@@ -68,9 +71,8 @@ database, storage and transcription status.
 `pnpm run e2e` runs the Playwright suite, which drives a browser with a
 fake capture device (`--use-fake-device-for-media-stream`) so recording
 behaviour can be tested in CI without a human at a screen picker. It
-currently proves the harness itself works; specs that exercise an actual
-record → share → play flow arrive alongside recording, sharing and
-playback themselves, which are still being built — see the
+currently proves the harness itself works; a spec that exercises an actual
+record → share → play flow arrives once capture and upload exist — see the
 [roadmap](docs/ROADMAP.md).
 
 ## Documentation

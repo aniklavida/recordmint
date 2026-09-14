@@ -3,9 +3,11 @@ export default function HomePage() {
     <main>
       <h1>RecordMint</h1>
       <p>
-        Pre-implementation. This is the monorepo skeleton — recording, upload
-        and playback are not built yet. See the repository README and{" "}
-        <code>docs/</code> for the specification and roadmap.
+        Early development. Accounts, workspaces, the recording library, the
+        player page and comments exist; browser capture and upload — the
+        part that actually produces a recording — do not yet. See the
+        repository README and <code>docs/</code> for the specification and
+        roadmap.
       </p>
     </main>
   );
