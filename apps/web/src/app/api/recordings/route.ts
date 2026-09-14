@@ -6,7 +6,7 @@ import { toErrorResponse } from "../../../lib/error-response";
 
 export const dynamic = "force-dynamic";
 
-/** GET /api/recordings?workspaceId=...&q=... — the library (SPEC.md §10), search included when `q` is present. */
+/** GET /api/recordings?workspaceId=...&q=... — the library (SPEC.md §6), search included when `q` is present. */
 export async function GET(request: Request): Promise<Response> {
   try {
     const user = await requireUser();

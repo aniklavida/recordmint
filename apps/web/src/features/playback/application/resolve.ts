@@ -31,7 +31,7 @@ export interface ResolveViewerInput {
 }
 
 /**
- * SPEC.md §9's whole access-control paragraph, executed in order:
+ * SPEC.md §11's whole access-control paragraph, executed in order:
  * resolve the link, apply visibility, and mint a read URL only once every
  * rule has passed. `not_found` is returned — never a 403 — for every
  * refusal that would otherwise confirm a private recording's existence
@@ -49,7 +49,7 @@ export async function resolveForViewer(input: ResolveViewerInput): Promise<Playb
   const recording = authorization.recording;
 
   if (recording.status !== "ready") {
-    // SPEC.md §9: the link exists from the moment recording starts, so
+    // SPEC.md §11: the link exists from the moment recording starts, so
     // this page has to render a clear in-progress state rather than a
     // broken player for a recording nobody has finished uploading yet.
     return { state: "in_progress", title: recording.title };

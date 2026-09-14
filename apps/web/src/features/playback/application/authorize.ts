@@ -8,7 +8,7 @@ export type ViewerAuthorization =
   | { ok: false; reason: "password_required" | "incorrect_password"; title: string };
 
 /**
- * The same visibility rule set SPEC.md §9 describes for playback, factored
+ * The same visibility rule set SPEC.md §11 describes for playback, factored
  * out so the comments surface — which SPEC.md §13 requires to follow the
  * recording's visibility rather than a separate looser rule — checks
  * identical rules rather than a second, hand-rolled copy of them.

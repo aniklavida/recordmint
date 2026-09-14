@@ -14,11 +14,13 @@ function safeFilename(title: string, container: string | null): string {
 }
 
 /**
- * "The object the browser produced is the object stored" (SPEC.md §6): a
- * download is a presigned read with a different disposition, not a
- * separate export pipeline. Responds with a redirect rather than the
- * bytes themselves, so the app server still never proxies media — the
- * browser follows the redirect straight to storage.
+ * SPEC.md §6 lists "download the original file" as its own capability,
+ * separate from playback — and the original file is exactly the object
+ * already sitting in the bucket, so this is a presigned read with a
+ * different disposition rather than a separate export pipeline. Responds
+ * with a redirect rather than the bytes themselves, so the app server
+ * still never proxies media — the browser follows the redirect straight
+ * to storage.
  */
 export async function GET(_request: Request, { params }: { params: { recordingId: string } }): Promise<Response> {
   try {

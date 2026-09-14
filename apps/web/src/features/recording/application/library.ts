@@ -1,7 +1,7 @@
 import { listRecordingsForMember, searchRecordingsForMember } from "@recordmint/db";
 import { getDb } from "../../../lib/db";
 
-/** The library: a member's own workspace's recordings, optionally filtered by a title/transcript search (SPEC.md §10). */
+/** The library: a member's own workspace's recordings, optionally filtered by a title/transcript search (SPEC.md §6). */
 export async function listLibrary(params: { workspaceId: string; userId: string; query?: string }) {
   const db = getDb();
   if (params.query && params.query.trim()) {

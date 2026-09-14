@@ -8,9 +8,9 @@ import { getStorageClient, getStorageConfig } from "../../../lib/storage";
 type MembershipRole = "owner" | "member" | "viewer";
 
 /**
- * SPEC.md §10 / §12: a member may change their own recordings, an owner
- * may change any of them. Resolved once, here, so rename, re-visibility
- * and delete cannot drift into different rules for "may I touch this row."
+ * SPEC.md §12: a member may change their own recordings, an owner may
+ * change any of them. Resolved once, here, so rename, re-visibility and
+ * delete cannot drift into different rules for "may I touch this row."
  */
 async function resolveEditable(params: { recordingId: string; userId: string; membershipRole: MembershipRole }) {
   const recording = await getRecordingForMember(getDb().orm, { recordingId: params.recordingId, userId: params.userId });
@@ -63,11 +63,12 @@ export async function updateRecording(input: UpdateRecordingInput) {
 }
 
 /**
- * Deletes the storage objects first, the row second (SPEC.md §10: "deletion
- * that actually removes the object from storage, not just the row"). If
- * the process dies between the two steps, the leftover row is detectable
- * and this function is safe to call again — `deleteRecordingObjects`
- * against an already-empty prefix does nothing and reports zero deleted.
+ * Deletes the storage objects first, the row second — SPEC.md §6 lists
+ * "delete a recording and every object behind it" as a capability, not
+ * just a row deletion. If the process dies between the two steps, the
+ * leftover row is detectable and this function is safe to call again —
+ * `deleteRecordingObjects` against an already-empty prefix does nothing
+ * and reports zero deleted.
  */
 export async function deleteRecording(params: { recordingId: string; userId: string; membershipRole: MembershipRole }) {
   const recording = await resolveEditable(params);

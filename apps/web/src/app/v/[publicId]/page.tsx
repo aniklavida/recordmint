@@ -14,7 +14,8 @@ interface PageProps {
 
 /**
  * Emits Open Graph metadata so a pasted link unfurls with a title and a
- * poster (SPEC.md §9's "the link unfurls" acceptance line). Deliberately
+ * poster — a share link that does not unfurl looks broken, which is why
+ * this page is server-rendered at all (docs/ARCHITECTURE.md). Deliberately
  * only ever resolves without a password: an og:image behind a password
  * wall is not something this function should mint a credential for just
  * to render a preview nobody typed a password to see.
@@ -40,8 +41,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 /**
- * `/v/<publicId>` — SPEC.md §9. Server-rendered so it can resolve
- * visibility and mint a read URL before anything reaches the client, and
+ * `/v/<publicId>` — SPEC.md §11's playback path. Server-rendered so it
+ * can resolve visibility and mint a read URL before anything reaches the client, and
  * so the metadata above can run without a second round trip.
  */
 export default async function PlayerPage({ params }: PageProps) {

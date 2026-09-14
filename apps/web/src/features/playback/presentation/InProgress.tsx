@@ -15,7 +15,7 @@ interface ReadyPayload {
 const POLL_INTERVAL_MS = 4000;
 
 /**
- * SPEC.md §9: the share link exists from the moment recording starts, so
+ * SPEC.md §11: the share link exists from the moment recording starts, so
  * this is the honest state for a recording that is not marked ready yet
  * — polling rather than a full page reload is what turns that into "it
  * just starts playing a few seconds after the uploader stops" instead of
