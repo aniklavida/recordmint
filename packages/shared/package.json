@@ -7,8 +7,10 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./vtt": "./dist/vtt.js"
   },
+  "sideEffects": false,
   "scripts": {
     "lint": "eslint .",
     "build": "tsc -p tsconfig.json",
