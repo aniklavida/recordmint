@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CommentsPanel } from "../../comments/presentation/CommentsPanel";
+import { ReactionBar } from "../../reactions/presentation/ReactionBar";
 import { TranscriptSearch } from "../../transcripts/presentation/TranscriptSearch";
 import { VideoPlayer } from "./VideoPlayer";
 
@@ -56,6 +57,12 @@ export function RecordingViewer({
   return (
     <div ref={containerRef} className="recording-viewer">
       <VideoPlayer src={playUrl} poster={posterUrl} captionsSrc={captionsSrc} title={title} />
+      <ReactionBar
+        publicId={publicId}
+        guestCommentingEnabled={guestCommentingEnabled}
+        isAuthenticated={isAuthenticated}
+        currentTimeSeconds={currentTimeSeconds}
+      />
       {captionsSrc ? <TranscriptSearch transcriptUrl={captionsSrc} /> : null}
       <CommentsPanel
         publicId={publicId}

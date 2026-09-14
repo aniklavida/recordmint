@@ -90,7 +90,45 @@ button {
   padding: 0.5rem 1rem;
 }
 
+.library-controls,
+.library-retention {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.library-controls input[type="search"] {
+  width: auto;
+  flex: 1 1 12rem;
+}
+
+.library-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.library-list li {
+  overflow-wrap: anywhere;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.reaction-bar-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.reaction-bar-picker button {
+  min-width: 2.75rem;
+}
+
 .comments-panel ol,
+.reaction-bar ul,
 .transcript-search ul {
   list-style: none;
   margin: 0;
