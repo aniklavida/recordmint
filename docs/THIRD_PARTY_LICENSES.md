@@ -27,13 +27,14 @@ Every entry was checked against the package's own published metadata or licence 
 
 ## Compiled class — shipped in `apps/web` and `apps/worker`
 
-83 packages, direct and transitive, across every `dependencies` (not `devDependencies`) entry in the six workspace members (`apps/web`, `apps/worker`, `packages/db`, `packages/storage`, `packages/shared`, `packages/recorder`). **All are MIT, Apache-2.0, BSD-3-Clause, ISC, Unlicense, 0BSD, or dual-licensed MIT/CC0-1.0 — every one clears the compiled-class bar.** `caniuse-lite`'s CC-BY-4.0 covers only its bundled browser-compatibility *data* (used at build time by Next.js/`browserslist`, not executed at runtime); see [Attribution](#attribution) below for what that requires.
+84 packages, direct and transitive, across every `dependencies` (not `devDependencies`) entry in the six workspace members (`apps/web`, `apps/worker`, `packages/db`, `packages/storage`, `packages/shared`, `packages/recorder`). **All are MIT, MIT-0, Apache-2.0, BSD-3-Clause, ISC, Unlicense, 0BSD, or dual-licensed MIT/CC0-1.0 — every one clears the compiled-class bar.** `caniuse-lite`'s CC-BY-4.0 covers only its bundled browser-compatibility *data* (used at build time by Next.js/`browserslist`, not executed at runtime); see [Attribution](#attribution) below for what that requires. `nodemailer` is the one dependency in this table under **MIT-0** ("MIT No Attribution"): its own bundled `LICENSE` carries the standard MIT text with the attribution/notice-inclusion clause removed, which is strictly more permissive than MIT, not less — verified 14 Sep 2026 by reading `node_modules/nodemailer/LICENSE` directly.
 
 Direct production dependencies, by workspace member:
 
 | Workspace | Dependency | Version (`package.json`) | Licence |
 |---|---|---|---|
 | `apps/web` | `next` | ^14.2.13 | MIT |
+| `apps/web` | `nodemailer` | ^10.0.9 | MIT-0 |
 | `apps/web` | `react` | ^18.3.1 | MIT |
 | `apps/web` | `react-dom` | ^18.3.1 | MIT |
 | `apps/worker` | `pg-boss` | ^10.1.5 | MIT |
@@ -103,6 +104,7 @@ Full transitive compiled-class tree (package, resolved version, licence), verifi
 | `nanoid` | 3.3.19 | MIT |
 | `nanoid` | 5.1.16 | MIT |
 | `next` | 14.2.35 | MIT |
+| `nodemailer` | 10.0.9 | MIT-0 |
 | `pg` | 8.23.0 | MIT |
 | `pg-boss` | 10.4.2 | MIT |
 | `pg-cloudflare` | 1.4.0 | MIT |

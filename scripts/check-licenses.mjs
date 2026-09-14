@@ -39,6 +39,11 @@ const p = (...parts) => path.join(rootDir, ...parts);
 // reciprocal obligation) that packages in this tree actually carry.
 const PERMISSIVE_NPM = new Set([
   'MIT',
+  // MIT-0 ("MIT No Attribution") is the same text as MIT with the
+  // attribution/notice-inclusion clause removed — strictly more
+  // permissive, not less. Verified 14 Sep 2026 against nodemailer@10.0.9's
+  // own bundled LICENSE file, which carries this SPDX id.
+  'MIT-0',
   'Apache-2.0',
   'BSD-2-Clause',
   'BSD-3-Clause',
