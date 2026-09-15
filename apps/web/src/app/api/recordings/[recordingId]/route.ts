@@ -28,13 +28,14 @@ async function resolveRole(recordingId: string, userId: string) {
   return membership.role;
 }
 
-export async function PATCH(request: Request, { params }: { params: { recordingId: string } }): Promise<Response> {
+export async function PATCH(request: Request, { params }: { params: Promise<{ recordingId: string }> }): Promise<Response> {
   try {
+    const { recordingId } = await params;
     const user = await requireUser();
-    const membershipRole = await resolveRole(params.recordingId, user.id);
+    const membershipRole = await resolveRole(recordingId, user.id);
     const body = (await request.json()) as Record<string, unknown>;
     const updated = await updateRecording({
-      recordingId: params.recordingId,
+      recordingId,
       userId: user.id,
       membershipRole,
       ...(typeof body.title === "string" ? { title: body.title } : {}),
@@ -50,11 +51,12 @@ export async function PATCH(request: Request, { params }: { params: { recordingI
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: { recordingId: string } }): Promise<Response> {
+export async function DELETE(_request: Request, { params }: { params: Promise<{ recordingId: string }> }): Promise<Response> {
   try {
+    const { recordingId } = await params;
     const user = await requireUser();
-    const membershipRole = await resolveRole(params.recordingId, user.id);
-    const result = await deleteRecording({ recordingId: params.recordingId, userId: user.id, membershipRole });
+    const membershipRole = await resolveRole(recordingId, user.id);
+    const result = await deleteRecording({ recordingId, userId: user.id, membershipRole });
     return Response.json({ ok: true, deletedObjectCount: result.deletedObjectCount });
   } catch (error) {
     return toErrorResponse(error);

@@ -1,3 +1,19 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# `next` pulls sharp as an optional dependency from 15 onward. Its prebuilt
+# libvips binaries are LGPL-3.0-or-later, which the licence gate correctly
+# refuses for anything compiled into user code. Nothing here uses next/image,
+# so sharp is removed rather than the rule being widened for it.
+overrides:
+  sharp: "-"
+
+# pnpm refuses to run a dependency's install scripts unless it is named here.
+# That is a supply-chain guard, not an obstacle — a postinstall script runs
+# arbitrary code at install time — so each one is allowed deliberately.
+allowBuilds:
+  # Links its platform binary. The build genuinely needs it.
+  esbuild: true
+  # Only prints a funding message. Denied.
+  core-js: false

@@ -12,5 +12,6 @@ export default defineConfig({
     // workspace/user id it created, so serializing costs a little wall
     // time and buys freedom from that one genuine cross-file race.
     fileParallelism: false,
+    exclude: ["**/node_modules/**", "**/dist/**", "**/.git/**"],
   },
 });

@@ -14,12 +14,9 @@ const nextConfig = {
   // not need one, since this package only ever runs server-side. Marking
   // it external tells Next to `require()` it directly from node_modules
   // at runtime instead of trying to bundle the binary into the trace.
-  // `serverComponentsExternalPackages` is still under `experimental` in
-  // Next 14 (this repository's pinned major version) — it graduated to a
-  // top-level `serverExternalPackages` only in Next 15.
-  experimental: {
-    serverComponentsExternalPackages: ["@node-rs/argon2"],
-  },
+  // `serverComponentsExternalPackages` was under `experimental` in
+  // Next 14; it graduated to top-level `serverExternalPackages` in Next 15+.
+  serverExternalPackages: ["@node-rs/argon2"],
 };
 
 export default nextConfig;
