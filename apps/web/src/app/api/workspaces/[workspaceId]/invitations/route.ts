@@ -14,17 +14,18 @@ const VALID_ROLES = new Set(["owner", "member", "viewer"]);
  * the operator's own UI is responsible for surfacing the link until one
  * exists.
  */
-export async function POST(request: Request, { params }: { params: { workspaceId: string } }): Promise<Response> {
+export async function POST(request: Request, { params }: { params: Promise<{ workspaceId: string }> }): Promise<Response> {
   try {
+    const { workspaceId } = await params;
     const user = await requireUser();
-    await requireMembership({ workspaceId: params.workspaceId, userId: user.id, minimumRole: "member" });
+    await requireMembership({ workspaceId, userId: user.id, minimumRole: "member" });
     const body = (await request.json()) as { email?: unknown; role?: unknown };
     const role = String(body.role ?? "member");
     if (!VALID_ROLES.has(role)) {
       throw new AppError("VALIDATION_ERROR", `role must be one of ${[...VALID_ROLES].join(", ")}.`);
     }
     const { invitation, token } = await invite({
-      workspaceId: params.workspaceId,
+      workspaceId,
       email: String(body.email ?? ""),
       role: role as "owner" | "member" | "viewer",
       invitedByUserId: user.id,

@@ -1,6 +1,6 @@
 # Third-party licence audit
 
-**Last verified: 2026-09-14.** This inventory is regenerated and re-checked at every release, not trusted from a prior note — see [`scripts/check-licenses.mjs`](../scripts/check-licenses.mjs), which CI runs on every push and pull request.
+**Last verified: 2026-09-15.** This inventory is regenerated and re-checked at every release, not trusted from a prior note — see [`scripts/check-licenses.mjs`](../scripts/check-licenses.mjs), which CI runs on every push and pull request.
 
 ## Why this file exists
 
@@ -38,7 +38,7 @@ Direct production dependencies, by workspace member:
 | `apps/web` | `react` | ^18.3.1 | MIT |
 | `apps/web` | `react-dom` | ^18.3.1 | MIT |
 | `apps/worker` | `pg-boss` | ^10.1.5 | MIT |
-| `packages/db` | `drizzle-orm` | ^0.33.0 | Apache-2.0 |
+| `packages/db` | `drizzle-orm` | ^0.45.2 | Apache-2.0 |
 | `packages/db` | `pg-boss` | ^10.1.5 | MIT |
 | `packages/db` | `postgres` | ^3.4.4 | Unlicense |
 | `packages/storage` | `@aws-sdk/client-s3` | ^3.658.1 | Apache-2.0 |
@@ -97,7 +97,7 @@ Full transitive compiled-class tree (package, resolved version, licence), verifi
 | `client-only` | 0.0.1 | MIT |
 | `cron-parser` | 4.9.0 | MIT |
 | `csstype` | 3.2.3 | MIT |
-| `drizzle-orm` | 0.33.0 | Apache-2.0 |
+| `drizzle-orm` | 0.45.2 | Apache-2.0 |
 | `graceful-fs` | 4.2.11 | ISC |
 | `js-tokens` | 4.0.0 | MIT |
 | `loose-envify` | 1.4.0 | MIT |

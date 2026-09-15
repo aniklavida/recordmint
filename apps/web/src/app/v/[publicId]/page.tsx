@@ -12,7 +12,7 @@ import { getDb } from "../../../lib/db";
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  params: { publicId: string };
+  params: Promise<{ publicId: string }>;
 }
 
 /**
@@ -24,7 +24,8 @@ interface PageProps {
  * to render a preview nobody typed a password to see.
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const resolution = await resolveForViewer({ publicId: params.publicId });
+  const { publicId } = await params;
+  const resolution = await resolveForViewer({ publicId });
   if (resolution.state === "not_found") {
     return { title: "Recording not found — RecordMint" };
   }
@@ -49,8 +50,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * so the metadata above can run without a second round trip.
  */
 export default async function PlayerPage({ params }: PageProps) {
+  const { publicId } = await params;
   const user = await getCurrentUser();
-  const resolution = await resolveForViewer({ publicId: params.publicId, viewerUserId: user?.id ?? null });
+  const resolution = await resolveForViewer({ publicId, viewerUserId: user?.id ?? null });
 
   if (resolution.state === "not_found") {
     notFound();
@@ -59,7 +61,7 @@ export default async function PlayerPage({ params }: PageProps) {
   if (resolution.state === "password_required") {
     return (
       <main>
-        <PasswordGate publicId={params.publicId} title={resolution.title} incorrect={resolution.incorrect} isAuthenticated={Boolean(user)} />
+        <PasswordGate publicId={publicId} title={resolution.title} incorrect={resolution.incorrect} isAuthenticated={Boolean(user)} />
       </main>
     );
   }
@@ -67,7 +69,7 @@ export default async function PlayerPage({ params }: PageProps) {
   if (resolution.state === "in_progress") {
     return (
       <main>
-        <InProgress publicId={params.publicId} title={resolution.title} isAuthenticated={Boolean(user)} />
+        <InProgress publicId={publicId} title={resolution.title} isAuthenticated={Boolean(user)} />
       </main>
     );
   }
@@ -82,7 +84,7 @@ export default async function PlayerPage({ params }: PageProps) {
   let settingsProps: { visibility: string; hasPassword: boolean; expiresAt: string | null } | null = null;
 
   if (user) {
-    const recordingRow = await getRecordingByPublicId(getDb().orm, params.publicId);
+    const recordingRow = await getRecordingByPublicId(getDb().orm, publicId);
     if (recordingRow) {
       const membership = await getMembership(getDb().orm, { workspaceId: recordingRow.workspaceId, userId: user.id });
       canEdit = Boolean(membership && (membership.role === "owner" || recordingRow.creatorId === user.id));
@@ -104,7 +106,7 @@ export default async function PlayerPage({ params }: PageProps) {
   return (
     <main>
       <RecordingViewer
-        publicId={params.publicId}
+        publicId={publicId}
         playUrl={resolution.playUrl}
         posterUrl={resolution.posterUrl}
         captionsSrc={resolution.transcriptUrl}
