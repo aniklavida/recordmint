@@ -22,11 +22,12 @@ function safeFilename(title: string, container: string | null): string {
  * still never proxies media — the browser follows the redirect straight
  * to storage.
  */
-export async function GET(_request: Request, { params }: { params: { recordingId: string } }): Promise<Response> {
+export async function GET(_request: Request, { params }: { params: Promise<{ recordingId: string }> }): Promise<Response> {
   try {
+    const { recordingId } = await params;
     const user = await requireUser();
     const db = getDb();
-    const recording = await getRecordingForMember(db.orm, { recordingId: params.recordingId, userId: user.id });
+    const recording = await getRecordingForMember(db.orm, { recordingId, userId: user.id });
     if (!recording) {
       throw new AppError("NOT_FOUND", "Recording not found.");
     }

@@ -42,21 +42,24 @@ export async function startSession(userId: string): Promise<void> {
   const sessionId = generateSecureToken();
   const expiresAt = new Date(Date.now() + SESSION_LIFETIME_MS);
   await createSession(db.orm, { id: sessionId, userId, expiresAt });
-  cookies().set(SESSION_COOKIE_NAME, sessionId, cookieOptions(expiresAt));
+  const cookieStore = await cookies();
+  cookieStore.set(SESSION_COOKIE_NAME, sessionId, cookieOptions(expiresAt));
 }
 
 /** Ends the session both server-side (the row) and client-side (the cookie) — either alone would leave a way back in. */
 export async function endSession(): Promise<void> {
-  const sessionId = cookies().get(SESSION_COOKIE_NAME)?.value;
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (sessionId) {
     await deleteSession(getDb().orm, sessionId);
   }
-  cookies().delete(SESSION_COOKIE_NAME);
+  cookieStore.delete(SESSION_COOKIE_NAME);
 }
 
 /** Resolves the current request's session cookie to a user, or `null` for a logged-out visitor. Never throws on a missing/expired/bogus cookie. */
 export async function getCurrentUser() {
-  const sessionId = cookies().get(SESSION_COOKIE_NAME)?.value;
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!sessionId) return null;
   const resolved = await getSessionWithUser(getDb().orm, sessionId);
   return resolved?.user ?? null;

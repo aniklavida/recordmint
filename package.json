@@ -6,7 +6,7 @@
   "engines": {
     "node": ">=20"
   },
-  "packageManager": "pnpm@9.12.0",
+  "packageManager": "pnpm@12.4.2",
   "scripts": {
     "build": "pnpm -r --if-present run build",
     "lint": "pnpm run check-licenses && pnpm -r --if-present run lint",

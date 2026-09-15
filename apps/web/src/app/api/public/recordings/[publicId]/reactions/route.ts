@@ -23,19 +23,21 @@ function resolveClientIp(request: Request): string {
   return request.headers.get("x-real-ip") ?? "unknown";
 }
 
-export async function GET(request: Request, { params }: { params: { publicId: string } }): Promise<Response> {
+export async function GET(request: Request, { params }: { params: Promise<{ publicId: string }> }): Promise<Response> {
   try {
+    const { publicId } = await params;
     const user = await getCurrentUser();
     const password = new URL(request.url).searchParams.get("password") ?? undefined;
-    const reactions = await listReactions({ publicId: params.publicId, viewerUserId: user?.id ?? null, password });
+    const reactions = await listReactions({ publicId, viewerUserId: user?.id ?? null, password });
     return Response.json({ reactions });
   } catch (error) {
     return toErrorResponse(error);
   }
 }
 
-export async function POST(request: Request, { params }: { params: { publicId: string } }): Promise<Response> {
+export async function POST(request: Request, { params }: { params: Promise<{ publicId: string }> }): Promise<Response> {
   try {
+    const { publicId } = await params;
     const user = await getCurrentUser();
     const body = (await request.json()) as {
       password?: unknown;
@@ -43,7 +45,7 @@ export async function POST(request: Request, { params }: { params: { publicId: s
       emoji?: unknown;
     };
     const reaction = await addReaction({
-      publicId: params.publicId,
+      publicId,
       viewerUserId: user?.id ?? null,
       password: typeof body.password === "string" ? body.password : undefined,
       timestampSeconds: Number(body.timestampSeconds ?? -1),
