@@ -14,9 +14,12 @@ export type UnsupportedReason =
   | "missing-media-recorder"
   | "missing-mime-type";
 
+export type CapabilityState = "supported" | "unsupported" | "unknown";
+
 export interface SupportResult {
   supported: boolean;
   reasons: UnsupportedReason[];
+  systemAudio: CapabilityState;
 }
 
 /** Minimal shape of the globals this probe reads, so it can be unit-tested without a real browser. */
@@ -67,7 +70,7 @@ export function checkSupport(globals: SupportGlobals): SupportResult {
     reasons.push("missing-mime-type");
   }
 
-  return { supported: reasons.length === 0, reasons };
+  return { supported: reasons.length === 0, reasons, systemAudio: "unknown" };
 }
 
 /** Convenience wrapper for call sites in the browser. */
