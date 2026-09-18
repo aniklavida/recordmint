@@ -9,7 +9,7 @@ const supported: SupportGlobals = {
 
 describe("checkSupport", () => {
   it("passes when every capability is present", () => {
-    expect(checkSupport(supported)).toEqual({ supported: true, reasons: [] });
+    expect(checkSupport(supported)).toEqual({ supported: true, reasons: [], systemAudio: "unknown" });
   });
 
   it("flags an insecure context", () => {
@@ -34,5 +34,9 @@ describe("checkSupport", () => {
   it("flags a missing MediaRecorder constructor entirely", () => {
     const result = checkSupport({ ...supported, mediaRecorderCtor: undefined });
     expect(result.reasons).toContain("missing-media-recorder");
+  });
+
+  it("reports systemAudio capability as unknown", () => {
+    expect(checkSupport(supported).systemAudio).toBe("unknown");
   });
 });

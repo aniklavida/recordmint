@@ -7,6 +7,9 @@ import { expect, test } from "@playwright/test";
  * test (`docs/ROADMAP.md` steps 2-4) — writing them now against
  * features that do not exist would be exactly the false-positive coverage
  * AGENTS.md's truthfulness rule warns about.
+ * 
+ * Note: The fake device cannot exercise the real OS screen picker or real system audio.
+ * A green CI run here is NOT a substitute for testing the human matrix (manual cross-browser testing).
  */
 test("the fake capture device delivers a real camera and microphone stream", async ({ page }) => {
   await page.goto("/");
