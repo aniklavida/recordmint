@@ -15,6 +15,13 @@ describe("captureDisplay", () => {
     };
     const result = await captureDisplay(globals);
     expect(result.audioObservation).toBe("audio-track-present");
+    expect(globals.getDisplayMedia).toHaveBeenCalledWith(
+      expect.objectContaining({
+        video: true,
+        audio: true,
+        systemAudio: "include",
+      })
+    );
   });
 
   it("reports no-audio-track when stream has no audio tracks", async () => {
@@ -23,5 +30,12 @@ describe("captureDisplay", () => {
     };
     const result = await captureDisplay(globals);
     expect(result.audioObservation).toBe("no-audio-track");
+    expect(globals.getDisplayMedia).toHaveBeenCalledWith(
+      expect.objectContaining({
+        video: true,
+        audio: true,
+        systemAudio: "include",
+      })
+    );
   });
 });
