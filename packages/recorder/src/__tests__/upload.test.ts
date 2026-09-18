@@ -96,6 +96,45 @@ describe("ChunkedUploader", () => {
     expect(newState.completedParts).toEqual([1]);
   });
   
+  it("retries failed part with original part number and order survives complete", async () => {
+    const uploader = createChunkedUploader(mockTransport);
+
+    // Part 1 succeeds
+    vi.mocked(mockTransport.putPart).mockResolvedValueOnce({ eTag: "etag-1" });
+    uploader.addChunk(createBlob(MIN_PART_SIZE));
+    
+    await new Promise((r) => setTimeout(r, 0));
+
+    // Part 2 fails
+    vi.mocked(mockTransport.putPart).mockRejectedValueOnce(new Error("Network Error"));
+    uploader.addChunk(createBlob(MIN_PART_SIZE));
+
+    await new Promise((r) => setTimeout(r, 0));
+
+    // Validate state
+    const state = uploader.getState();
+    expect(state.completedParts).toEqual([1]);
+    expect(state.failedParts).toEqual([2]);
+
+    // Fix transport and retry part 2
+    vi.mocked(mockTransport.putPart).mockResolvedValueOnce({ eTag: "etag-2" });
+    uploader.retryFailedParts();
+
+    await new Promise((r) => setTimeout(r, 0));
+
+    const stateAfterRetry = uploader.getState();
+    expect(stateAfterRetry.completedParts).toContain(1);
+    expect(stateAfterRetry.completedParts).toContain(2);
+    expect(stateAfterRetry.failedParts).toEqual([]);
+
+    await uploader.complete();
+
+    expect(mockTransport.completeUpload).toHaveBeenCalledWith([
+      { partNumber: 1, eTag: "etag-1" },
+      { partNumber: 2, eTag: "etag-2" },
+    ]);
+  });
+
   it("maintains correct state machine for tab close reporting", async () => {
     const uploader = createChunkedUploader(mockTransport);
     
