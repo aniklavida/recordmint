@@ -59,19 +59,6 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
-      minio:
-        image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
-        ports:
-          - 9000:9000
-          - 9001:9001
-        options: >-
-          --health-cmd "mc ready local"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
     steps:
       - uses: actions/checkout@v4
 
@@ -87,6 +74,35 @@ jobs:
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
+
+      - name: Start MinIO
+        # MinIO's image has no default CMD — it needs `server /data` passed
+        # explicitly, and GitHub Actions' `services:` block has no way to
+        # supply a container command (only `image`/`env`/`ports`/`options`
+        # docker-run flags), so a `services:` entry for it starts the
+        # container, gets no args, prints its own usage text and exits
+        # unhealthy. Running it directly with `docker run -d` and the
+        # required args, on the same `--network host` the bucket/CORS step
+        # already uses, is the fix — matching how `infra/compose.yaml`'s
+        # `minio` service passes `command: server /data --console-address ":9001"`.
+        run: |
+          docker run -d --name minio --network host \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e \
+            server /data --console-address ":9001"
+
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9000/minio/health/live > /dev/null; then
+              echo "MinIO is ready."
+              exit 0
+            fi
+            echo "Waiting for MinIO to become ready ($i/30)..."
+            sleep 2
+          done
+          echo "MinIO did not become ready in time." >&2
+          docker logs minio || true
+          exit 1
 
       - name: Initialize MinIO Bucket and CORS
         run: |
