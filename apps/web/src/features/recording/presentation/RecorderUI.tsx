@@ -87,7 +87,11 @@ export function RecorderUI({ workspaceId }: { workspaceId: string }) {
         putPart: async (url, blob) => {
           const res = await fetch(url, { method: "PUT", body: blob });
           if (!res.ok) throw new Error("Failed to upload part");
-          return { eTag: res.headers.get("ETag") || "mock-etag" };
+          const eTag = res.headers.get("ETag");
+          if (!eTag) {
+            throw new Error("S3 did not return an ETag header for this part — check the bucket's CORS configuration exposes ETag");
+          }
+          return { eTag };
         },
         completeUpload: async (parts) => {
           const res = await fetch(`/api/recordings/${recordingId}/complete`, {
