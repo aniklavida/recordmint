@@ -210,3 +210,34 @@ export async function setRecordingPosterKey(orm: OrmClient, recordingId: string,
     .returning();
   return rows[0] ?? null;
 }
+
+export interface CreateRecordingParams {
+  id: string;
+  publicId: string;
+  workspaceId: string;
+  creatorId: string;
+  title: string;
+  objectKey: string;
+  uploadId?: string;
+}
+
+/**
+ * Creates a new recording in the "uploading" state.
+ * Lets visibility and guestCommentingEnabled fall back to their schema defaults.
+ */
+export async function createRecording(orm: OrmClient, params: CreateRecordingParams) {
+  const rows = await orm
+    .insert(schema.recordings)
+    .values({
+      id: params.id,
+      publicId: params.publicId,
+      workspaceId: params.workspaceId,
+      creatorId: params.creatorId,
+      title: params.title,
+      objectKey: params.objectKey,
+      uploadId: params.uploadId,
+      status: "uploading",
+    })
+    .returning();
+  return rows[0] ?? null;
+}
