@@ -108,9 +108,13 @@ jobs:
           }
           EOF
           aws s3api put-bucket-cors --bucket recordmint --cors-configuration file://cors.json --endpoint-url http://localhost:9000
+        env:
+          AWS_ACCESS_KEY_ID: minioadmin
+          AWS_SECRET_ACCESS_KEY: minioadmin123
+          AWS_DEFAULT_REGION: us-east-1
 
       - name: Run database migrations
-        run: pnpm --filter @recordmint/db run migrate
+        run: pnpm --filter @recordmint/db run db:migrate
         env:
           DATABASE_URL: postgres://recordmint:recordmint@localhost:5432/recordmint
 

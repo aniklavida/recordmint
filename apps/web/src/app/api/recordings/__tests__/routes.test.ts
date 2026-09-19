@@ -19,10 +19,16 @@ vi.mock("../../../../lib/storage");
 describe("Recording API Routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(guards.requireUser).mockResolvedValue({ id: "user-123" } as any);
-    vi.mocked(libDb.getDb).mockReturnValue({ orm: {} } as any);
-    vi.mocked(libStorage.getStorageClient).mockReturnValue({} as any);
-    vi.mocked(libStorage.getStorageConfig).mockReturnValue({ bucket: "recordmint" } as any);
+    vi.mocked(guards.requireUser).mockResolvedValue(
+      { id: "user-123" } as unknown as Awaited<ReturnType<typeof guards.requireUser>>,
+    );
+    vi.mocked(libDb.getDb).mockReturnValue({ orm: {} } as unknown as ReturnType<typeof libDb.getDb>);
+    vi.mocked(libStorage.getStorageClient).mockReturnValue(
+      {} as unknown as ReturnType<typeof libStorage.getStorageClient>,
+    );
+    vi.mocked(libStorage.getStorageConfig).mockReturnValue(
+      { bucket: "recordmint" } as unknown as ReturnType<typeof libStorage.getStorageConfig>,
+    );
   });
 
   describe("Gap 1.1: Authorization boundary on parts and complete", () => {
@@ -62,7 +68,7 @@ describe("Recording API Routes", () => {
     it("calls transitionRecordingStatus with to: 'failed' and exact reason", async () => {
       vi.mocked(db.getRecordingForMember).mockResolvedValue({
         id: "rec-123", status: "uploading", uploadId: "up-123", objectKey: "key", workspaceId: "ws", creatorId: "u"
-      } as any);
+      } as unknown as Awaited<ReturnType<typeof db.getRecordingForMember>>);
       
       const req = new Request("http://localhost/api", {
         method: "POST",
@@ -83,7 +89,7 @@ describe("Recording API Routes", () => {
     it("transitions to failed even if abortMultipartUpload throws", async () => {
       vi.mocked(db.getRecordingForMember).mockResolvedValue({
         id: "rec-123", status: "uploading", uploadId: "up-123", objectKey: "key", workspaceId: "ws", creatorId: "u"
-      } as any);
+      } as unknown as Awaited<ReturnType<typeof db.getRecordingForMember>>);
       
       vi.mocked(storage.abortMultipartUpload).mockRejectedValue(new Error("Transient S3 error"));
       
@@ -106,7 +112,9 @@ describe("Recording API Routes", () => {
 
   describe("Gap 1.3: createRecording visibility default", () => {
     it("calls createRecording without passing explicit visibility or guestCommentingEnabled", async () => {
-      vi.mocked(guards.requireMembership).mockResolvedValue(true as any);
+      vi.mocked(guards.requireMembership).mockResolvedValue(
+        true as unknown as Awaited<ReturnType<typeof guards.requireMembership>>,
+      );
       vi.mocked(storage.createMultipartUpload).mockResolvedValue({ uploadId: "up-123" });
       vi.mocked(storage.originalKey).mockReturnValue("recordings/rec-123/original.mp4");
       
@@ -119,7 +127,7 @@ describe("Recording API Routes", () => {
       expect(res.status).toBe(200);
       
       expect(db.createRecording).toHaveBeenCalledTimes(1);
-      const callArgs = vi.mocked(db.createRecording).mock.calls[0]![1] as any;
+      const callArgs = vi.mocked(db.createRecording).mock.calls[0]![1] as unknown as Record<string, unknown>;
       
       expect(callArgs.visibility).toBeUndefined();
       expect(callArgs).not.toHaveProperty("guestCommentingEnabled");
@@ -130,7 +138,7 @@ describe("Recording API Routes", () => {
     it("rejects a recording not in uploading status", async () => {
       vi.mocked(db.getRecordingForMember).mockResolvedValue({
         id: "rec-123", status: "ready", uploadId: "up-123", objectKey: "key", workspaceId: "ws", creatorId: "u"
-      } as any);
+      } as unknown as Awaited<ReturnType<typeof db.getRecordingForMember>>);
       
       const req = new Request("http://localhost/api", {
         method: "POST",
@@ -147,7 +155,7 @@ describe("Recording API Routes", () => {
     it("calls completeMultipartUpload with exact parts on happy path", async () => {
       vi.mocked(db.getRecordingForMember).mockResolvedValue({
         id: "rec-123", status: "uploading", uploadId: "up-123", objectKey: "key", workspaceId: "ws", creatorId: "u"
-      } as any);
+      } as unknown as Awaited<ReturnType<typeof db.getRecordingForMember>>);
       
       const partsPayload = [{ eTag: "abc", partNumber: 1 }, { eTag: "def", partNumber: 2 }];
       const req = new Request("http://localhost/api", {
@@ -159,7 +167,9 @@ describe("Recording API Routes", () => {
       expect(res.status).toBe(200);
       
       expect(storage.completeMultipartUpload).toHaveBeenCalledTimes(1);
-      const callArgs = vi.mocked(storage.completeMultipartUpload).mock.calls[0]![1] as any;
+      const callArgs = vi.mocked(storage.completeMultipartUpload).mock.calls[0]![1] as unknown as {
+        parts: unknown;
+      };
       
       expect(callArgs.parts).toEqual(partsPayload);
       expect(db.transitionRecordingStatus).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
