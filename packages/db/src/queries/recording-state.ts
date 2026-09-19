@@ -48,6 +48,10 @@ export async function transitionRecordingStatus(
     from: RecordingStatus;
     to: RecordingStatus;
     failureReason?: string;
+    container?: string;
+    codecs?: string;
+    durationSeconds?: number;
+    sizeBytes?: number;
   },
 ) {
   if (!canTransitionRecordingStatus(params.from, params.to)) {
@@ -59,6 +63,10 @@ export async function transitionRecordingStatus(
     .set({
       status: params.to,
       failureReason: params.to === "failed" ? (params.failureReason ?? null) : null,
+      ...(params.container !== undefined ? { container: params.container } : {}),
+      ...(params.codecs !== undefined ? { codecs: params.codecs } : {}),
+      ...(params.durationSeconds !== undefined ? { durationSeconds: params.durationSeconds } : {}),
+      ...(params.sizeBytes !== undefined ? { sizeBytes: params.sizeBytes } : {}),
       updatedAt: new Date(),
     })
     .where(
