@@ -8,6 +8,7 @@ export {
   updateRecordingMetadata,
   deleteRecordingRow,
   setRecordingPosterKey,
+  createRecording,
 } from "./recordings.js";
 export type { RecordingMetadataPatch } from "./recordings.js";
 export {

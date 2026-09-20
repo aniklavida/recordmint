@@ -45,6 +45,20 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16.15-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685
+        env:
+          POSTGRES_USER: recordmint
+          POSTGRES_PASSWORD: recordmint
+          POSTGRES_DB: recordmint
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U recordmint -d recordmint"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
 
@@ -61,8 +75,75 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Start MinIO
+        # MinIO's image has no default CMD — it needs `server /data` passed
+        # explicitly, and GitHub Actions' `services:` block has no way to
+        # supply a container command (only `image`/`env`/`ports`/`options`
+        # docker-run flags), so a `services:` entry for it starts the
+        # container, gets no args, prints its own usage text and exits
+        # unhealthy. Running it directly with `docker run -d` and the
+        # required args, on the same `--network host` the bucket/CORS step
+        # already uses, is the fix — matching how `infra/compose.yaml`'s
+        # `minio` service passes `command: server /data --console-address ":9001"`.
+        run: |
+          docker run -d --name minio --network host \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -e MINIO_API_CORS_ALLOW_ORIGIN="*" \
+            quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e \
+            server /data --console-address ":9001"
+
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:9000/minio/health/live > /dev/null; then
+              echo "MinIO is ready."
+              exit 0
+            fi
+            echo "Waiting for MinIO to become ready ($i/30)..."
+            sleep 2
+          done
+          echo "MinIO did not become ready in time." >&2
+          docker logs minio || true
+          exit 1
+
+      - name: Initialize MinIO Bucket and CORS
+        run: |
+          docker run --rm --network host --entrypoint sh \
+            quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 \
+            -c "mc alias set local http://localhost:9000 minioadmin minioadmin123 && mc mb --ignore-existing local/recordmint && mc anonymous set none local/recordmint"
+        env:
+          AWS_ACCESS_KEY_ID: minioadmin
+          AWS_SECRET_ACCESS_KEY: minioadmin123
+          AWS_DEFAULT_REGION: us-east-1
+
+      - name: Run database migrations
+        run: pnpm --filter @recordmint/db run db:migrate
+        env:
+          DATABASE_URL: postgres://recordmint:recordmint@localhost:5432/recordmint
+
       - name: Build
         run: pnpm run build
+        env:
+          DATABASE_URL: postgres://recordmint:recordmint@localhost:5432/recordmint
+          S3_ENDPOINT: http://localhost:9000
+          S3_REGION: us-east-1
+          S3_BUCKET: recordmint
+          S3_ACCESS_KEY_ID: minioadmin
+          S3_SECRET_ACCESS_KEY: minioadmin123
+          S3_FORCE_PATH_STYLE: "true"
+          PUBLIC_BASE_URL: http://localhost:3000
+          SESSION_SECRET: local-development-only-secret-do-not-use-in-production
+          PORT: "3000"
 
       - name: Run Playwright (fake capture device)
         run: pnpm run e2e
+        env:
+          DATABASE_URL: postgres://recordmint:recordmint@localhost:5432/recordmint
+          S3_ENDPOINT: http://localhost:9000
+          S3_REGION: us-east-1
+          S3_BUCKET: recordmint
+          S3_ACCESS_KEY_ID: minioadmin
+          S3_SECRET_ACCESS_KEY: minioadmin123
+          S3_FORCE_PATH_STYLE: "true"
+          PUBLIC_BASE_URL: http://localhost:3000
+          SESSION_SECRET: local-development-only-secret-do-not-use-in-production
+          PORT: "3000"
