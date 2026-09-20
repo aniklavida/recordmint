@@ -89,6 +89,7 @@ jobs:
           docker run -d --name minio --network host \
             -e MINIO_ROOT_USER=minioadmin \
             -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            -e MINIO_API_CORS_ALLOW_ORIGIN="*" \
             quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e \
             server /data --console-address ":9001"
 
@@ -109,27 +110,10 @@ jobs:
           docker run --rm --network host --entrypoint sh \
             quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 \
             -c "mc alias set local http://localhost:9000 minioadmin minioadmin123 && mc mb --ignore-existing local/recordmint && mc anonymous set none local/recordmint"
-          
-          # mc doesn't have a clean cors command, but aws-cli is pre-installed on ubuntu-latest and works against MinIO
-          cat <<EOF > cors.json
-          {
-            "CORSRules": [
-              {
-                "AllowedHeaders": ["*"],
-                "AllowedMethods": ["GET", "PUT", "POST", "HEAD"],
-                "AllowedOrigins": ["*"],
-                "ExposeHeaders": ["ETag"]
-              }
-            ]
-          }
-          EOF
-          aws s3api put-bucket-cors --bucket recordmint --cors-configuration file://cors.json --endpoint-url http://localhost:9000
         env:
           AWS_ACCESS_KEY_ID: minioadmin
           AWS_SECRET_ACCESS_KEY: minioadmin123
           AWS_DEFAULT_REGION: us-east-1
-          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
-          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
 
       - name: Run database migrations
         run: pnpm --filter @recordmint/db run db:migrate
