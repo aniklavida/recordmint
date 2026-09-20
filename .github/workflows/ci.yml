@@ -106,9 +106,9 @@ jobs:
 
       - name: Initialize MinIO Bucket and CORS
         run: |
-          docker run --rm --network host \
+          docker run --rm --network host --entrypoint sh \
             quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 \
-            sh -c "mc alias set local http://localhost:9000 minioadmin minioadmin123 && mc mb --ignore-existing local/recordmint && mc anonymous set none local/recordmint"
+            -c "mc alias set local http://localhost:9000 minioadmin minioadmin123 && mc mb --ignore-existing local/recordmint && mc anonymous set none local/recordmint"
           
           # mc doesn't have a clean cors command, but aws-cli is pre-installed on ubuntu-latest and works against MinIO
           cat <<EOF > cors.json
