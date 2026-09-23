@@ -16,6 +16,21 @@ import {
   type RecorderResult,
 } from "@recordmint/recorder";
 
+// Reports whether the link actually landed on the clipboard. The caller uses
+// this to decide what to tell the user — a UI that claims "copied" when the
+// write silently failed is a false claim, not a convenience.
+async function copyToClipboard(link: string): Promise<boolean> {
+  if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
+    return false;
+  }
+  try {
+    await navigator.clipboard.writeText(link);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function RecorderUI({ workspaceId }: { workspaceId: string }) {
   const [support, setSupport] = useState<SupportResult | null>(null);
   const [source, setSource] = useState<DisplaySurface>("monitor");
@@ -216,10 +231,7 @@ export function RecorderUI({ workspaceId }: { workspaceId: string }) {
 
       const link = `${window.location.origin}/v/${publicId}`;
       setShareLink(link);
-      setCopied(true);
-      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(link).catch(() => {});
-      }
+      setCopied(await copyToClipboard(link));
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       // Retain local recording blob so user never loses their data
@@ -248,10 +260,7 @@ export function RecorderUI({ workspaceId }: { workspaceId: string }) {
 
       const link = `${window.location.origin}/v/${publicId}`;
       setShareLink(link);
-      setCopied(true);
-      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(link).catch(() => {});
-      }
+      setCopied(await copyToClipboard(link));
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(`Retry failed: ${msg}. Your local recording remains safe.`);
