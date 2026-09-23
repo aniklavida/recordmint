@@ -47,9 +47,11 @@ export function createRecorder({
     },
     pause: () => {
       mediaRecorder.pause();
+      uploader.pause();
     },
     resume: () => {
       mediaRecorder.resume();
+      uploader.resume();
     },
     stop: async () => {
       return new Promise<void>((resolve, reject) => {

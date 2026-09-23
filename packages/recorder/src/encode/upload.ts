@@ -10,6 +10,8 @@ export interface UploadTransport {
 
 export interface ChunkedUploader {
   addChunk: (chunk: Blob) => void;
+  pause: () => void;
+  resume: () => void;
   retryFailedParts: () => void;
   complete: () => Promise<void>;
   getState: () => UploaderState;
@@ -17,10 +19,13 @@ export interface ChunkedUploader {
 
 export interface UploaderState {
   bufferedBytes: number;
+  uploadedBytes: number;
+  totalBytes: number;
   uploadingParts: number[];
   failedParts: number[];
   completedParts: number[];
   isRecoverable: boolean;
+  isPaused: boolean;
 }
 
 const MIN_PART_SIZE = 5 * 1024 * 1024; // 5 MiB (S3 minimum)
@@ -33,7 +38,10 @@ const MIN_PART_SIZE = 5 * 1024 * 1024; // 5 MiB (S3 minimum)
 export function createChunkedUploader(transport: UploadTransport): ChunkedUploader {
   let buffer: Blob[] = [];
   let currentSize = 0;
+  let totalBytes = 0;
+  let uploadedBytes = 0;
   let partNumber = 1;
+  let isPaused = false;
 
   const completedParts: { partNumber: number; eTag: string }[] = [];
   const uploadingParts = new Map<number, { blob: Blob; promise: Promise<void> }>();
@@ -44,6 +52,7 @@ export function createChunkedUploader(transport: UploadTransport): ChunkedUpload
       const { url } = await transport.signPart(currentPartNumber);
       const { eTag } = await transport.putPart(url, blob);
       completedParts.push({ partNumber: currentPartNumber, eTag });
+      uploadedBytes += blob.size;
       uploadingParts.delete(currentPartNumber);
     } catch {
       uploadingParts.delete(currentPartNumber);
@@ -57,6 +66,10 @@ export function createChunkedUploader(transport: UploadTransport): ChunkedUpload
   };
 
   const processBuffer = (isFinal = false) => {
+    if (isPaused && !isFinal) {
+      return;
+    }
+
     while (currentSize >= MIN_PART_SIZE || (isFinal && currentSize > 0)) {
       let partSize = 0;
       const partBlobs: Blob[] = [];
@@ -86,6 +99,14 @@ export function createChunkedUploader(transport: UploadTransport): ChunkedUpload
     addChunk: (chunk: Blob) => {
       buffer.push(chunk);
       currentSize += chunk.size;
+      totalBytes += chunk.size;
+      processBuffer();
+    },
+    pause: () => {
+      isPaused = true;
+    },
+    resume: () => {
+      isPaused = false;
       processBuffer();
     },
     retryFailedParts: () => {
@@ -96,6 +117,7 @@ export function createChunkedUploader(transport: UploadTransport): ChunkedUpload
       }
     },
     complete: async () => {
+      isPaused = false;
       processBuffer(true);
 
       // Wait for all ongoing uploads to finish (either succeed or fail)
@@ -112,10 +134,13 @@ export function createChunkedUploader(transport: UploadTransport): ChunkedUpload
     getState: () => {
       return {
         bufferedBytes: currentSize,
+        uploadedBytes,
+        totalBytes,
         uploadingParts: Array.from(uploadingParts.keys()),
         failedParts: Array.from(failedParts.keys()),
         completedParts: completedParts.map((p) => p.partNumber),
         isRecoverable: failedParts.size > 0 || uploadingParts.size > 0 || currentSize > 0 || buffer.length > 0,
+        isPaused,
       };
     },
   };

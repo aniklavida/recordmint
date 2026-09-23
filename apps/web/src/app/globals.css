@@ -189,3 +189,179 @@ button {
   border-radius: 0.25rem;
   padding: 0.75rem;
 }
+
+.recorder-ui {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.capability-verdict {
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.95rem;
+  border: 1px solid currentColor;
+}
+
+.capability-supported {
+  background-color: #f0fdf4;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.capability-unsupported {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.recorder-pre-record {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 24rem;
+}
+
+.recorder-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.recorder-toggles {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.recorder-toggles label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.recorder-toggles input[type="checkbox"] {
+  width: auto;
+  min-height: 1.25rem;
+  min-width: 1.25rem;
+}
+
+.recorder-live {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background-color: #fafafa;
+}
+
+.live-status-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-pill {
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+}
+
+.status-recording {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-paused {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.elapsed-time {
+  font-family: monospace;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.upload-progress {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.live-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.camera-preview-container {
+  margin-top: 0.5rem;
+  width: 12rem;
+  height: 9rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 2px solid #cbd5e1;
+  background-color: #000;
+}
+
+.camera-preview-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.share-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 0.5rem;
+}
+
+.clipboard-notice {
+  font-weight: 600;
+  color: #166534;
+  margin: 0;
+}
+
+.share-link-row {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.share-link-input {
+  flex: 1 1 14rem;
+  padding: 0.5rem;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.error-banner {
+  padding: 1rem;
+  border-radius: 0.375rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.error-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
