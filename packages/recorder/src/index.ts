@@ -7,7 +7,7 @@ export {
 export type { SupportResult, SupportGlobals, UnsupportedReason, CapabilityState } from "./capture/support.js";
 
 export { captureDisplay, readDisplayMediaGlobals } from "./capture/display.js";
-export type { CaptureDisplayResult, DisplayMediaGlobals, AudioTrackObservation, CaptureDisplayConstraints } from "./capture/display.js";
+export type { CaptureDisplayResult, DisplayMediaGlobals, AudioTrackObservation, CaptureDisplayConstraints, DisplaySurface, CaptureDisplayOptions } from "./capture/display.js";
 
 export { captureUserMedia, readUserMediaGlobals } from "./capture/user-media.js";
 export type { UserMediaGlobals } from "./capture/user-media.js";

@@ -101,4 +101,29 @@ describe("Recorder wrapper", () => {
     await stopPromise;
     expect(mockUploader.complete).toHaveBeenCalledTimes(1);
   });
+
+  it("pauses and resumes both mediaRecorder and uploader", () => {
+    const mockUploader = {
+      addChunk: vi.fn(),
+      pause: vi.fn(),
+      resume: vi.fn(),
+      complete: vi.fn().mockResolvedValue(undefined),
+    } as unknown as ChunkedUploader;
+
+    const recorder = createRecorder({
+      mediaRecorderCtor: FakeMediaRecorder as unknown as typeof MediaRecorder,
+      stream: {} as MediaStream,
+      uploader: mockUploader,
+      mimeType: "video/webm",
+    });
+
+    recorder.start();
+    recorder.pause();
+    expect(mockUploader.pause).toHaveBeenCalledTimes(1);
+    expect(recorder.getMediaRecorder().state).toBe("paused");
+
+    recorder.resume();
+    expect(mockUploader.resume).toHaveBeenCalledTimes(1);
+    expect(recorder.getMediaRecorder().state).toBe("recording");
+  });
 });

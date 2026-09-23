@@ -22,7 +22,7 @@ export default defineConfig({
       name: "chromium-fake-device",
       use: {
         ...devices["Desktop Chrome"],
-        permissions: ["camera", "microphone"],
+        permissions: ["camera", "microphone", "clipboard-read", "clipboard-write"],
         launchOptions: {
           args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"],
         },

@@ -5,7 +5,8 @@ import { RecorderUI } from "../../features/recording/presentation/RecorderUI";
 
 export const dynamic = "force-dynamic";
 
-export default async function RecordPage({ searchParams }: { searchParams: { workspaceId?: string } }) {
+export default async function RecordPage({ searchParams }: { searchParams: Promise<{ workspaceId?: string }> }) {
+  const { workspaceId } = await searchParams;
   const user = await getCurrentUser();
   if (!user) {
     return (
@@ -27,7 +28,7 @@ export default async function RecordPage({ searchParams }: { searchParams: { wor
   }
 
   const selected =
-    memberships.find((row) => row.workspace.id === searchParams.workspaceId) ?? memberships[0]!;
+    memberships.find((row) => row.workspace.id === workspaceId) ?? memberships[0]!;
 
   return (
     <main>

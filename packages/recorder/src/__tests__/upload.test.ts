@@ -158,4 +158,26 @@ describe("ChunkedUploader", () => {
     // Completed, no buffer, no failed, no uploading -> not recoverable
     expect(uploader.getState().isRecoverable).toBe(false);
   });
+
+  it("suspends part uploads when paused and resumes them when resumed", async () => {
+    const uploader = createChunkedUploader(mockTransport);
+
+    uploader.pause();
+    expect(uploader.getState().isPaused).toBe(true);
+
+    // Add 5 MiB while paused
+    uploader.addChunk(createBlob(MIN_PART_SIZE));
+
+    // Even though buffer reached 5 MiB, no upload should have been triggered
+    expect(mockTransport.signPart).not.toHaveBeenCalled();
+    expect(uploader.getState().bufferedBytes).toBe(MIN_PART_SIZE);
+
+    // Resume uploader
+    uploader.resume();
+    expect(uploader.getState().isPaused).toBe(false);
+
+    // Now part 1 should be uploaded
+    expect(mockTransport.signPart).toHaveBeenCalledTimes(1);
+    expect(mockTransport.signPart).toHaveBeenCalledWith(1);
+  });
 });

@@ -1,3 +1,10 @@
+export type DisplaySurface = "monitor" | "window" | "browser";
+
+export interface CaptureDisplayOptions {
+  surface?: DisplaySurface;
+  systemAudio?: "include" | "exclude";
+}
+
 export interface CaptureDisplayConstraints extends MediaStreamConstraints {
   systemAudio?: "include" | "exclude";
 }
@@ -19,17 +26,36 @@ export interface CaptureDisplayResult {
   audioObservation: AudioTrackObservation;
 }
 
+function isDisplayMediaGlobals(arg: unknown): arg is DisplayMediaGlobals {
+  return typeof arg === "object" && arg !== null && "getDisplayMedia" in arg;
+}
+
 /**
  * Captures the display media (screen/window/tab).
  * Requests system audio and measures if it was actually delivered.
  */
 export async function captureDisplay(
-  globals: DisplayMediaGlobals = readDisplayMediaGlobals(),
+  optionsOrGlobals?: CaptureDisplayOptions | DisplayMediaGlobals,
+  maybeGlobals?: DisplayMediaGlobals,
 ): Promise<CaptureDisplayResult> {
+  let options: CaptureDisplayOptions = {};
+  let globals: DisplayMediaGlobals;
+
+  if (isDisplayMediaGlobals(optionsOrGlobals)) {
+    globals = optionsOrGlobals;
+  } else {
+    options = optionsOrGlobals ?? {};
+    globals = maybeGlobals ?? readDisplayMediaGlobals();
+  }
+
+  const videoConstraints: boolean | MediaTrackConstraints = options.surface
+    ? { displaySurface: options.surface }
+    : true;
+
   const stream = await globals.getDisplayMedia({
-    video: true,
+    video: videoConstraints,
     audio: true,
-    systemAudio: "include",
+    systemAudio: options.systemAudio ?? "include",
   });
 
   const audioTracks = stream.getAudioTracks();

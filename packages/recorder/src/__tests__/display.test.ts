@@ -38,4 +38,18 @@ describe("captureDisplay", () => {
       })
     );
   });
+
+  it("passes displaySurface constraint when surface option is provided", async () => {
+    const globals: DisplayMediaGlobals = {
+      getDisplayMedia: vi.fn().mockResolvedValue(createMockStream([{}], [{}])),
+    };
+    await captureDisplay({ surface: "browser" }, globals);
+    expect(globals.getDisplayMedia).toHaveBeenCalledWith(
+      expect.objectContaining({
+        video: { displaySurface: "browser" },
+        audio: true,
+        systemAudio: "include",
+      })
+    );
+  });
 });
