@@ -14,6 +14,19 @@ export async function checkStorageReachable(
     await client.send(new HeadBucketCommand({ Bucket: bucket }));
     return { reachable: true };
   } catch (error) {
-    return { reachable: false, error: error instanceof Error ? error.message : String(error) };
+    return { reachable: false, error: describeError(error) };
   }
+}
+
+/**
+ * `error.message` is empty for Node's native-fetch `AggregateError` (the
+ * connect-refused case undici throws when the endpoint is down) — the real
+ * reason lives in `error.errors[]`. Falls back to `error.message` for every
+ * other error shape.
+ */
+function describeError(error: unknown): string {
+  if (error instanceof AggregateError && error.errors.length > 0) {
+    return error.errors.map((e) => (e instanceof Error ? e.message : String(e))).join("; ");
+  }
+  return error instanceof Error ? error.message : String(error);
 }
