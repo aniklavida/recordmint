@@ -18,10 +18,10 @@ const MIGRATIONS_FOLDER = join(dirname(fileURLToPath(import.meta.url)), "..", "m
  *
  * Called by both apps on startup, and directly via `pnpm db:migrate`.
  */
-export async function runMigrations(): Promise<void> {
+export async function runMigrations(migrationsFolder = MIGRATIONS_FOLDER): Promise<void> {
   const db = createDb(loadDbConfigFromEnv());
   try {
-    await migrate(db.orm, { migrationsFolder: MIGRATIONS_FOLDER });
+    await migrate(db.orm, { migrationsFolder });
   } finally {
     await db.sql.end();
   }

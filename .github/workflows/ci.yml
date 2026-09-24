@@ -134,6 +134,21 @@ jobs:
           SESSION_SECRET: local-development-only-secret-do-not-use-in-production
           PORT: "3000"
 
+      - name: Run real-service release checklist checks
+        run: |
+          pnpm --filter @recordmint/db exec vitest run src/__tests__/migrations.live.test.ts
+          pnpm --filter @recordmint/storage exec vitest run src/__tests__/live.test.ts
+          pnpm --filter @recordmint/web exec vitest run src/app/api/health/__tests__/route.live.test.ts src/features/recording/application/__tests__/manage.live.test.ts
+        env:
+          DATABASE_URL: postgres://recordmint:recordmint@localhost:5432/recordmint
+          S3_ENDPOINT: http://localhost:9000
+          S3_REGION: us-east-1
+          S3_BUCKET: recordmint
+          S3_ACCESS_KEY_ID: minioadmin
+          S3_SECRET_ACCESS_KEY: minioadmin123
+          S3_FORCE_PATH_STYLE: "true"
+          TRANSCRIPTION_ENABLED: "false"
+
       - name: Run Playwright (fake capture device)
         run: pnpm run e2e
         env:
