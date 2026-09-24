@@ -12,11 +12,16 @@ interface ComponentHealth {
   error?: string;
 }
 
+interface TranscriptionHealth {
+  enabled: boolean;
+  error?: string;
+}
+
 interface HealthResponse {
   status: "ok" | "degraded";
   database: ComponentHealth;
   storage: ComponentHealth;
-  transcription: { enabled: boolean };
+  transcription: TranscriptionHealth;
 }
 
 /**
@@ -27,16 +32,32 @@ interface HealthResponse {
  */
 export async function GET(): Promise<Response> {
   const [database, storage] = await Promise.all([checkDatabase(), checkStorage()]);
-  const transcription = { enabled: process.env.TRANSCRIPTION_ENABLED === "true" };
+  const transcription = checkTranscriptionConfiguration(process.env);
 
   const body: HealthResponse = {
-    status: database.reachable && storage.reachable ? "ok" : "degraded",
+    status:
+      database.reachable && storage.reachable && transcription.error === undefined
+        ? "ok"
+        : "degraded",
     database,
     storage,
     transcription,
   };
 
   return Response.json(body, { status: body.status === "ok" ? 200 : 503 });
+}
+
+function checkTranscriptionConfiguration(env: NodeJS.ProcessEnv): TranscriptionHealth {
+  if (env.TRANSCRIPTION_ENABLED === undefined || env.TRANSCRIPTION_ENABLED === "false") {
+    return { enabled: false };
+  }
+  if (env.TRANSCRIPTION_ENABLED === "true") {
+    return { enabled: true };
+  }
+  return {
+    enabled: false,
+    error: "TRANSCRIPTION_ENABLED must be either true or false.",
+  };
 }
 
 async function checkDatabase(): Promise<ComponentHealth> {

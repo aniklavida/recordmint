@@ -194,6 +194,26 @@ describe.skipIf(!process.env.S3_ENDPOINT)("packages/storage against live S3-comp
     expect(bodyText).toMatch(/Expired|AccessDenied/i);
   }, 15_000);
 
+  it("rejects an unsigned public read while a presigned read succeeds", async () => {
+    const recordingId = `live-test-${Date.now()}-private-bucket`;
+    const key = originalKey(recordingId, "txt");
+    const body = Buffer.from("private object");
+    createdKeys.push(key);
+    await client.send(new PutObjectCommand({ Bucket: config.bucket, Key: key, Body: body }));
+
+    const unsignedUrl = new URL(
+      `${config.bucket}/${key.split("/").map(encodeURIComponent).join("/")}`,
+      `${config.endpoint}/`,
+    );
+    const unsignedResponse = await fetch(unsignedUrl);
+    expect(unsignedResponse.status).toBe(403);
+
+    const presignedUrl = await presignRead(client, { bucket: config.bucket, key, authorize: allow });
+    const presignedResponse = await fetch(presignedUrl);
+    expect(presignedResponse.status).toBe(200);
+    expect(Buffer.from(await presignedResponse.arrayBuffer()).equals(body)).toBe(true);
+  }, 30_000);
+
   it("refuses an unauthorised presign request before any URL is minted", async () => {
     const recordingId = `live-test-${Date.now()}-unauthorized`;
     const key = originalKey(recordingId, "bin");

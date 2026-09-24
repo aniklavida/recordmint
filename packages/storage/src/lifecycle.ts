@@ -44,6 +44,14 @@ async function deleteKeysInBatches(client: S3Client, bucket: string, keys: strin
  * Returns the number of objects deleted, so a caller can confirm a
  * nonexistent or already-empty recording did nothing rather than error.
  */
+export async function listRecordingObjectKeys(
+  client: S3Client,
+  bucket: string,
+  recordingId: string,
+): Promise<string[]> {
+  return listAllKeysUnderPrefix(client, bucket, recordingKeyPrefix(recordingId));
+}
+
 export async function deleteRecordingObjects(
   client: S3Client,
   bucket: string,

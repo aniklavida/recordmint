@@ -1,6 +1,13 @@
 import { generateId, generatePublicId } from "@recordmint/shared";
 import { upsertTranscript } from "@recordmint/db";
-import { originalKey, posterKey, transcriptKey, putObject, getObjectStream } from "@recordmint/storage";
+import {
+  originalKey,
+  posterKey,
+  listRecordingObjectKeys,
+  transcriptKey,
+  putObject,
+  getObjectStream,
+} from "@recordmint/storage";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { getDb } from "../../../../lib/db.js";
 import { getStorageClient, getStorageConfig } from "../../../../lib/storage.js";
@@ -69,6 +76,8 @@ describe.skipIf(!process.env.S3_ENDPOINT || !process.env.DATABASE_URL)(
       for (const key of [objectKey, posterObjectKey, transcriptObjectKey]) {
         await expect(getObjectStream(client, config.bucket, key)).resolves.toBeTruthy();
       }
+      const beforeDeletion = await listRecordingObjectKeys(client, config.bucket, recordingId);
+      expect(beforeDeletion.sort()).toEqual([objectKey, posterObjectKey, transcriptObjectKey].sort());
 
       const result = await deleteRecording({ recordingId, userId: creatorUserId, membershipRole: "member" });
       expect(result.deletedObjectCount).toBe(3);
@@ -76,6 +85,8 @@ describe.skipIf(!process.env.S3_ENDPOINT || !process.env.DATABASE_URL)(
       for (const key of [objectKey, posterObjectKey, transcriptObjectKey]) {
         await expect(getObjectStream(client, config.bucket, key)).rejects.toThrow();
       }
+      const afterDeletion = await listRecordingObjectKeys(client, config.bucket, recordingId);
+      expect(afterDeletion).toEqual([]);
 
       const rows = await db.sql`SELECT id FROM recordings WHERE id = ${recordingId}`;
       expect(rows.length).toBe(0);

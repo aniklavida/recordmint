@@ -24,18 +24,18 @@
 
 ## Security
 
-- [ ] The storage bucket rejects unsigned public reads.
+- [x] The storage bucket rejects unsigned public reads.
 - [ ] `private` links are refused to a logged-out viewer, `password` links without the password, and `expiring` links after expiry.
 - [ ] Presigned read URLs expire, and expiry is verified rather than assumed.
 - [ ] No credential is stored in browser local storage.
-- [ ] Deleting a recording removes every object under its prefix, verified against the bucket.
+- [x] Deleting a recording removes every object under its prefix, verified against the bucket.
 
 ## Engineering
 
 - [ ] A recording plays end to end with the app server stopped after the read URL was minted.
 - [ ] Unit, end-to-end and dependency-direction checks all run green from a clean checkout, in CI.
-- [ ] Migrations apply cleanly to an empty database and to the previous release's database.
-- [ ] The health endpoint reports storage, database and transcription status correctly when each is broken.
+- [x] Migrations apply cleanly to an empty database and to the previous release's database.
+- [x] The health endpoint reports storage, database and transcription status correctly when each is broken.
 
 ## Repository
 
