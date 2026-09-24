@@ -12,6 +12,8 @@ import { workspaces } from "./workspaces.js";
  */
 export const recordingStatusEnum = pgEnum("recording_status", ["uploading", "ready", "failed"]);
 
+export const trimStatusEnum = pgEnum("trim_status", ["none", "pending", "processing", "ready", "failed"]);
+
 /**
  * SPEC.md §12 "Link visibility": private (workspace members only),
  * unlisted (anyone with the link — the default), password (link + shared
@@ -82,6 +84,12 @@ export const recordings = pgTable(
     uploadId: text("upload_id"),
     /** packages/storage's `posterKey(recordingId)`, once the worker has produced one. */
     posterKey: text("poster_key"),
+    trimStatus: trimStatusEnum("trim_status").notNull().default("none"),
+    trimStartSeconds: real("trim_start_seconds"),
+    trimEndSeconds: real("trim_end_seconds"),
+    trimmedObjectKey: text("trimmed_object_key"),
+    trimmedDurationSeconds: real("trimmed_duration_seconds"),
+    trimFailureReason: text("trim_failure_reason"),
 
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

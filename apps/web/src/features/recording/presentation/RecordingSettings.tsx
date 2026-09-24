@@ -64,6 +64,8 @@ export function RecordingSettings({
   visibility,
   hasPassword,
   expiresAt,
+  durationSeconds,
+  trimStatus,
   visibilityOptions,
   onUpdated,
 }: {
@@ -72,6 +74,8 @@ export function RecordingSettings({
   visibility: string;
   hasPassword: boolean;
   expiresAt: string | null;
+  durationSeconds: number | null;
+  trimStatus: string;
   visibilityOptions: readonly string[];
   onUpdated: (update: RecordingSettingsUpdate) => void;
 }) {
@@ -85,6 +89,10 @@ export function RecordingSettings({
   const [savingVisibility, setSavingVisibility] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
+  const [trimStart, setTrimStart] = useState(0);
+  const [trimEnd, setTrimEnd] = useState(durationSeconds ?? 0);
+  const [savingTrim, setSavingTrim] = useState(false);
+  const [trimMessage, setTrimMessage] = useState<string | null>(null);
 
   function patchRecording(body: Record<string, unknown>): Promise<{ recording: Record<string, unknown> }> {
     return fetch(`/api/recordings/${recordingId}`, {
@@ -151,6 +159,24 @@ export function RecordingSettings({
   function handleVisibilitySubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     submitVisibility();
+  }
+
+  function submitTrim(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+    setError(null);
+    setTrimMessage(null);
+    setSavingTrim(true);
+    fetch(`/api/recordings/${recordingId}/trim`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ startSeconds: trimStart, endSeconds: trimEnd }),
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error("trim failed");
+        setTrimMessage("Trim queued. The original stays available until the replacement is ready.");
+      })
+      .catch(() => setError("Could not queue the trim."))
+      .finally(() => setSavingTrim(false));
   }
 
   function handleCancelConfirmation(): void {
@@ -234,6 +260,35 @@ export function RecordingSettings({
           </button>
         )}
       </form>
+
+      {durationSeconds !== null ? (
+        <form onSubmit={submitTrim} aria-label="Trim recording">
+          <label htmlFor={`trim-start-${recordingId}`}>Trim start (seconds)</label>
+          <input
+            id={`trim-start-${recordingId}`}
+            type="number"
+            min={0}
+            max={durationSeconds}
+            step="0.1"
+            value={trimStart}
+            onChange={(event) => setTrimStart(Number(event.target.value))}
+          />
+          <label htmlFor={`trim-end-${recordingId}`}>Trim end (seconds)</label>
+          <input
+            id={`trim-end-${recordingId}`}
+            type="number"
+            min={0}
+            max={durationSeconds}
+            step="0.1"
+            value={trimEnd}
+            onChange={(event) => setTrimEnd(Number(event.target.value))}
+          />
+          <button type="submit" disabled={savingTrim || trimStatus === "pending" || trimStatus === "processing"}>
+            {savingTrim ? "Queueing…" : "Trim start and end"}
+          </button>
+          {trimMessage ? <p role="status">{trimMessage}</p> : null}
+        </form>
+      ) : null}
 
       {error ? <p role="alert">{error}</p> : null}
     </div>

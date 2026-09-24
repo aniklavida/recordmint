@@ -30,4 +30,5 @@ export const QUEUE_NAMES = {
   thumbnail: "recordmint-thumbnail",
   retentionSweep: "recordmint-retention-sweep",
   commentNotification: "recordmint-comment-notification",
+  trim: "recordmint-trim",
 } as const;

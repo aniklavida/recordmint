@@ -160,7 +160,7 @@ Started as separate operating-system processes by `docker compose`. RecordMint n
 
 ### Planned, not yet shipped
 
-`docs/SPEC.md` and `README.md` describe `ffmpeg` (poster frames, optional recompression, optional remux) and `whisper.cpp` / `faster-whisper` (transcription) as process-class dependencies. **Neither appears in `infra/Dockerfile.worker`, `infra/compose.yaml`, or any `package.json` today** — there is no `apt-get install ffmpeg`, no whisper binary, and no worker code that shells out to either yet. Per the truthfulness rule, they are not included in the audited tables above because nothing ships them yet; they will be re-verified and added to this file, with a pinned version, the day they are actually installed by a Dockerfile or compose service.
+`docs/SPEC.md` and `README.md` describe `ffmpeg` (poster frames, optional recompression, optional remux, start/end stream-copy trim) and `whisper.cpp` / `faster-whisper` (transcription) as process-class dependencies. **Neither appears in `infra/Dockerfile.worker`, `infra/compose.yaml`, or any `package.json` today** — there is no `apt-get install ffmpeg` or whisper binary. The worker invokes an operator-provided ffmpeg binary as a separate process, never a linked library; its GPL/LGPL obligations do not reach shipped code. The exact binary version and licence therefore remain an operator deployment concern until a Dockerfile or compose service installs and pins one.
 
 ## Attribution
 

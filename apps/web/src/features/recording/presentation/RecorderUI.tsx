@@ -31,6 +31,23 @@ async function copyToClipboard(link: string): Promise<boolean> {
   }
 }
 
+async function recordedDuration(chunks: Blob[], fallbackSeconds: number): Promise<number> {
+  if (chunks.length === 0 || typeof document === "undefined") return fallbackSeconds;
+  const url = URL.createObjectURL(new Blob(chunks));
+  const video = document.createElement("video");
+  video.preload = "metadata";
+  video.src = url;
+  return new Promise((resolve) => {
+    const finish = (duration: number): void => {
+      URL.revokeObjectURL(url);
+      video.removeAttribute("src");
+      resolve(duration);
+    };
+    video.onloadedmetadata = () => finish(Number.isFinite(video.duration) && video.duration > 0 ? video.duration : fallbackSeconds);
+    video.onerror = () => finish(fallbackSeconds);
+  });
+}
+
 export function RecorderUI({ workspaceId }: { workspaceId: string }) {
   const [support, setSupport] = useState<SupportResult | null>(null);
   const [source, setSource] = useState<DisplaySurface>("monitor");
@@ -58,6 +75,7 @@ export function RecorderUI({ workspaceId }: { workspaceId: string }) {
   const recordedChunksRef = useRef<Blob[]>([]);
   const cameraVideoRef = useRef<HTMLVideoElement | null>(null);
   const extRef = useRef<string>("mp4");
+  const durationRef = useRef(0);
 
   useEffect(() => {
     try {
@@ -92,6 +110,7 @@ export function RecorderUI({ workspaceId }: { workspaceId: string }) {
       setCopied(false);
       setLocalBlobUrl(null);
       setElapsed(0);
+      durationRef.current = 0;
       setUploaderState(null);
       recordedChunksRef.current = [];
 
@@ -161,10 +180,11 @@ export function RecorderUI({ workspaceId }: { workspaceId: string }) {
           return { eTag };
         },
         completeUpload: async (parts) => {
+          durationRef.current = await recordedDuration(recordedChunksRef.current, durationRef.current || elapsed);
           const res = await fetch(`/api/recordings/${recordingId}/complete`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ parts, container: ext }),
+            body: JSON.stringify({ parts, container: ext, durationSeconds: durationRef.current }),
           });
           if (!res.ok) throw new Error("Failed to complete upload");
         },
@@ -191,7 +211,12 @@ export function RecorderUI({ workspaceId }: { workspaceId: string }) {
       setIsPaused(false);
       setUploaderState(uploader.getState());
 
-      timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
+      timerRef.current = setInterval(() => setElapsed((e) => {
+        const next = e + 1;
+        durationRef.current = next;
+        return next;
+      }), 1000);
+
       progressIntervalRef.current = setInterval(() => {
         setUploaderState(uploader.getState());
       }, 500);

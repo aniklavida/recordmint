@@ -33,6 +33,7 @@ export function toRecordingDTO(recording: RecordingRow, extra?: { viewCount?: nu
     durationSeconds: recording.durationSeconds,
     sizeBytes: recording.sizeBytes,
     hasPoster: recording.posterKey !== null,
+    trimStatus: recording.trimStatus,
     createdAt: recording.createdAt,
     updatedAt: recording.updatedAt,
     ...(extra?.viewCount !== undefined ? { viewCount: extra.viewCount } : {}),

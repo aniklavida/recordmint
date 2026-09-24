@@ -81,7 +81,13 @@ export default async function PlayerPage({ params }: PageProps) {
   // this branch, so a guest never causes this query at all.
   let canEdit = false;
   let viewCount: number | null = null;
-  let settingsProps: { visibility: string; hasPassword: boolean; expiresAt: string | null } | null = null;
+  let settingsProps: {
+    visibility: string;
+    hasPassword: boolean;
+    expiresAt: string | null;
+    durationSeconds: number | null;
+    trimStatus: string;
+  } | null = null;
 
   if (user) {
     const recordingRow = await getRecordingByPublicId(getDb().orm, publicId);
@@ -93,6 +99,8 @@ export default async function PlayerPage({ params }: PageProps) {
           visibility: recordingRow.visibility,
           hasPassword: recordingRow.passwordHash !== null,
           expiresAt: recordingRow.expiresAt ? recordingRow.expiresAt.toISOString() : null,
+          durationSeconds: recordingRow.durationSeconds,
+          trimStatus: recordingRow.trimStatus,
         };
       }
       viewCount = await getViewCountForMember({
@@ -122,6 +130,8 @@ export default async function PlayerPage({ params }: PageProps) {
                 visibility: settingsProps.visibility,
                 hasPassword: settingsProps.hasPassword,
                 expiresAt: settingsProps.expiresAt,
+                durationSeconds: settingsProps.durationSeconds,
+                trimStatus: settingsProps.trimStatus,
                 visibilityOptions: recordingVisibilityEnum.enumValues,
               }
             : null

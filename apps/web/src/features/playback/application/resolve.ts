@@ -60,8 +60,15 @@ export async function resolveForViewer(input: ResolveViewerInput): Promise<Playb
   const client = getStorageClient();
   const allow = () => true; // every rule above already passed
 
+  const playbackKey = recording.trimStatus === "ready" && recording.trimmedObjectKey
+    ? recording.trimmedObjectKey
+    : recording.objectKey;
+  const playbackDurationSeconds = recording.trimStatus === "ready" && recording.trimmedDurationSeconds !== null
+    ? recording.trimmedDurationSeconds
+    : recording.durationSeconds;
+
   const [playUrl, posterUrl] = await Promise.all([
-    presignRead(client, { bucket: config.bucket, key: recording.objectKey, authorize: allow }),
+    presignRead(client, { bucket: config.bucket, key: playbackKey, authorize: allow }),
     recording.posterKey
       ? presignRead(client, { bucket: config.bucket, key: recording.posterKey, authorize: allow })
       : Promise.resolve(null),
@@ -80,9 +87,10 @@ export async function resolveForViewer(input: ResolveViewerInput): Promise<Playb
     recording: {
       id: recording.id,
       title: recording.title,
-      description: recording.description,
-      durationSeconds: recording.durationSeconds,
-      createdAt: recording.createdAt,
+        description: recording.description,
+        durationSeconds: playbackDurationSeconds,
+        createdAt: recording.createdAt,
+
     },
     playUrl,
     posterUrl,

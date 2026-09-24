@@ -211,6 +211,67 @@ export async function setRecordingPosterKey(orm: OrmClient, recordingId: string,
   return rows[0] ?? null;
 }
 
+export async function requestRecordingTrim(
+  orm: OrmClient,
+  params: { recordingId: string; startSeconds: number; endSeconds: number },
+) {
+  const rows = await orm
+    .update(schema.recordings)
+    .set({
+      trimStatus: "pending",
+      trimStartSeconds: params.startSeconds,
+      trimEndSeconds: params.endSeconds,
+      trimFailureReason: null,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(schema.recordings.id, params.recordingId),
+        eq(schema.recordings.status, "ready"),
+        ne(schema.recordings.trimStatus, "pending"),
+        ne(schema.recordings.trimStatus, "processing"),
+      ),
+    )
+    .returning();
+  return rows[0] ?? null;
+}
+
+export async function setTrimProcessing(orm: OrmClient, recordingId: string) {
+  const rows = await orm
+    .update(schema.recordings)
+    .set({ trimStatus: "processing", updatedAt: new Date() })
+    .where(eq(schema.recordings.id, recordingId))
+    .returning();
+  return rows[0] ?? null;
+}
+
+export async function setTrimReady(
+  orm: OrmClient,
+  params: { recordingId: string; objectKey: string; durationSeconds: number },
+) {
+  const rows = await orm
+    .update(schema.recordings)
+    .set({
+      trimStatus: "ready",
+      trimmedObjectKey: params.objectKey,
+      trimmedDurationSeconds: params.durationSeconds,
+      trimFailureReason: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.recordings.id, params.recordingId))
+    .returning();
+  return rows[0] ?? null;
+}
+
+export async function setTrimFailed(orm: OrmClient, params: { recordingId: string; reason: string }) {
+  const rows = await orm
+    .update(schema.recordings)
+    .set({ trimStatus: "failed", trimFailureReason: params.reason, updatedAt: new Date() })
+    .where(eq(schema.recordings.id, params.recordingId))
+    .returning();
+  return rows[0] ?? null;
+}
+
 export interface CreateRecordingParams {
   id: string;
   publicId: string;

@@ -15,6 +15,7 @@ export interface LibraryRecording {
   hasPassword: boolean;
   expiresAt: string | null;
   durationSeconds: number | null;
+  trimStatus: string;
   createdAt: string;
   /**
    * The workspace's own view count for this recording — always present
@@ -235,6 +236,8 @@ export function LibraryList({
                       visibility={recording.visibility}
                       hasPassword={recording.hasPassword}
                       expiresAt={recording.expiresAt}
+                      durationSeconds={recording.durationSeconds}
+                      trimStatus={recording.trimStatus}
                       visibilityOptions={visibilityOptions}
                       onUpdated={(update) => handleSettingsUpdated(recording.id, update)}
                     />

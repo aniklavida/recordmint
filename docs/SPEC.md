@@ -54,7 +54,7 @@ Screen, window and tab capture · microphone capture · camera capture composite
 
 ### Useful
 
-Timestamped comments · reactions on the player timeline · transcript generation on the host · captions rendered as WebVTT · transcript search within a recording · view counts and a per-recording view log · link visibility — private, unlisted, password · link expiry · download the original file · delete a recording and every object behind it · retention policy per workspace · a poster thumbnail extracted on the server · trim the start and end, which is the only editing v1 has.
+Timestamped comments · reactions on the player timeline · transcript generation on the host · captions rendered as WebVTT · transcript search within a recording · view counts and a per-recording view log · link visibility — private, unlisted, password · link expiry · download the original file · delete a recording and every object behind it · retention policy per workspace · a poster thumbnail extracted on the server · trim the start and end through a background stream-copy remux, which is the only editing v1 has.
 
 ### Not in v1
 
@@ -68,9 +68,9 @@ Current Chromium-based browsers can record **MP4 (H.264 + AAC) natively**, which
 
 > **Server-side transcoding is not on the v1 critical path.**
 
-That removes the heaviest and most expensive component of a self-hosted video platform. There is no encoding farm, no job backlog, no "your video is processing" wall, and no CPU bill. The object uploaded is the object served.
+That removes the heaviest and most expensive component of a self-hosted video platform. There is no encoding farm, no job backlog, no "your video is processing" wall, and no CPU bill on the recording or share-link path. The object uploaded is the object served by default; optional worker-derived assets are separate objects and never block the share link.
 
-**ffmpeg is still present, but demoted.** It extracts poster frames, optionally recompresses for long-term storage, and can remux for faster seeking. It is invoked as a binary on a background worker and never stands between a user and a share link.
+**ffmpeg is still present, but demoted.** It extracts poster frames, optionally recompresses for long-term storage, can remux for faster seeking, and performs the post-link start/end trim as a stream copy. It is invoked as a binary on a background worker and never stands between a user and a share link. The original object remains untouched while the replacement is created and verified.
 
 ## 8 · Architecture
 
@@ -113,7 +113,7 @@ Four processes and two stores. No Redis, no message broker, no transcoding tier.
 
 ### Format strategy
 
-Record MP4 (H.264 + AAC) where the browser reports support; fall back to WebM (VP9 or VP8 + Opus) where it does not. Whichever arrived is stored, its container and codecs are recorded, and it is served directly. **Neither path transcodes on the critical path** — both play in the browsers RecordMint supports.
+Record MP4 (H.264 + AAC) where the browser reports support; fall back to WebM (VP9 or VP8 + Opus) where it does not. Whichever arrived is stored, its container and codecs are recorded, and it is served directly. **Neither path transcodes on the critical path** — both play in the browsers RecordMint supports. When an editor trims a recording, the worker creates a separate derived object with the encoded packets copied into a new container; playback uses it only after a full decode check succeeds, and the original remains the download source.
 
 ## 9 · Stack
 

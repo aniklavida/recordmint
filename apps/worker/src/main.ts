@@ -4,6 +4,7 @@ import { runCommentNotificationJob, type CommentNotificationJobData } from "./jo
 import { runRetentionSweep } from "./jobs/retention.js";
 import { runThumbnailJob, type ThumbnailJobData } from "./jobs/thumbnail.js";
 import { runTranscriptJob, type TranscriptJobData } from "./jobs/transcript.js";
+import { runTrimJob, type TrimJobData } from "./jobs/trim.js";
 
 /**
  * The worker process. Nothing here is on the critical path to a share
@@ -58,6 +59,19 @@ async function main(): Promise<void> {
     }
   });
 
+  await boss.createQueue(`${QUEUE_NAMES.trim}-dead-letter`);
+  await boss.createQueue(QUEUE_NAMES.trim, {
+    name: QUEUE_NAMES.trim,
+    retryLimit: 3,
+    retryBackoff: true,
+    deadLetter: `${QUEUE_NAMES.trim}-dead-letter`,
+  });
+  await boss.work<TrimJobData>(QUEUE_NAMES.trim, async (jobs) => {
+    for (const job of jobs) {
+      await runTrimJob(job.data);
+    }
+  });
+
   if (transcriptionEnabled) {
     await boss.createQueue(`${QUEUE_NAMES.transcript}-dead-letter`);
     await boss.createQueue(QUEUE_NAMES.transcript, {
@@ -89,7 +103,7 @@ async function main(): Promise<void> {
   await boss.schedule(QUEUE_NAMES.retentionSweep, "0 * * * *"); // hourly
 
   console.log(
-    `RecordMint worker ready. Queues: ${QUEUE_NAMES.thumbnail}, ${QUEUE_NAMES.retentionSweep}, ${QUEUE_NAMES.commentNotification}` +
+    `RecordMint worker ready. Queues: ${QUEUE_NAMES.thumbnail}, ${QUEUE_NAMES.retentionSweep}, ${QUEUE_NAMES.commentNotification}, ${QUEUE_NAMES.trim}` +
       (transcriptionEnabled ? `, ${QUEUE_NAMES.transcript}` : " (transcription disabled)"),
   );
 

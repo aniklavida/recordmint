@@ -34,6 +34,13 @@ async function startQueue(): Promise<PgBoss> {
     retryBackoff: true,
     deadLetter: `${QUEUE_NAMES.commentNotification}-dead-letter`,
   });
+  await instance.createQueue(`${QUEUE_NAMES.trim}-dead-letter`);
+  await instance.createQueue(QUEUE_NAMES.trim, {
+    name: QUEUE_NAMES.trim,
+    retryLimit: 3,
+    retryBackoff: true,
+    deadLetter: `${QUEUE_NAMES.trim}-dead-letter`,
+  });
   return instance;
 }
 

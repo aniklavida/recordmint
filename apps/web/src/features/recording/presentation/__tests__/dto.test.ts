@@ -21,6 +21,12 @@ const BASE_RECORDING = {
   sizeBytes: null,
   uploadId: "s3-upload-id-should-never-leak",
   posterKey: "recordings/rec1/poster.jpg",
+  trimStatus: "none" as const,
+  trimStartSeconds: null,
+  trimEndSeconds: null,
+  trimmedObjectKey: null,
+  trimmedDurationSeconds: null,
+  trimFailureReason: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
