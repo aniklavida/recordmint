@@ -84,6 +84,22 @@ export async function extractPosterFrame(inputPath: string, outputPath: string, 
   ]);
 }
 
+export async function extractAudio(inputPath: string, outputPath: string): Promise<void> {
+  await runFfmpeg([
+    "-y",
+    "-i",
+    inputPath,
+    "-vn",
+    "-ac",
+    "1",
+    "-ar",
+    "16000",
+    "-c:a",
+    "pcm_s16le",
+    outputPath,
+  ]);
+}
+
 export async function trimMediaFile(inputPath: string, outputPath: string, startSeconds: number, endSeconds: number): Promise<void> {
   await runFfmpeg([
     "-y",
