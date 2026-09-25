@@ -20,6 +20,10 @@ export function posterKey(recordingId: string): string {
   return `${recordingPrefix(recordingId)}/poster.jpg`;
 }
 
+export function trimmedKey(recordingId: string, ext: string): string {
+  return `${recordingPrefix(recordingId)}/trimmed.${ext}`;
+}
+
 export function transcriptKey(recordingId: string): string {
   return `${recordingPrefix(recordingId)}/transcript.vtt`;
 }

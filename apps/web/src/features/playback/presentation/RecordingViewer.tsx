@@ -47,6 +47,8 @@ export function RecordingViewer({
     visibility: string;
     hasPassword: boolean;
     expiresAt: string | null;
+    durationSeconds: number | null;
+    trimStatus: string;
     visibilityOptions: readonly string[];
   } | null;
 }) {
@@ -94,6 +96,8 @@ export function RecordingViewer({
           visibility={settings.visibility}
           hasPassword={settings.hasPassword}
           expiresAt={settings.expiresAt}
+          durationSeconds={settings.durationSeconds}
+          trimStatus={settings.trimStatus}
           visibilityOptions={settings.visibilityOptions}
           onUpdated={(update) => {
             if (update.title !== undefined) setLiveTitle(update.title);

@@ -3,7 +3,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { extractPosterFrame, FfmpegError } from "../ffmpeg.js";
+import { extractPosterFrame, FfmpegError, probeMediaDuration, trimMediaFile, verifyTrimmedMedia } from "../ffmpeg.js";
 
 const ffmpegAvailable = spawnSync("ffmpeg", ["-version"]).status === 0;
 
@@ -17,10 +17,12 @@ const ffmpegAvailable = spawnSync("ffmpeg", ["-version"]).status === 0;
 describe.skipIf(!ffmpegAvailable)("extractPosterFrame", () => {
   let workDir: string;
   let sourceVideoPath: string;
+  let trimSourceVideoPath: string;
 
   beforeAll(async () => {
     workDir = await mkdtemp(join(tmpdir(), "recordmint-ffmpeg-test-"));
     sourceVideoPath = join(workDir, "source.mp4");
+    trimSourceVideoPath = join(workDir, "trim-source.mp4");
     // A synthetic 2-second test pattern — no fixture file needed, and no
     // screen-capture human gesture required (this is a worker media test,
     // not a capture one).
@@ -36,6 +38,19 @@ describe.skipIf(!ffmpegAvailable)("extractPosterFrame", () => {
     ]);
     if (result.status !== 0) {
       throw new Error(`Failed to generate the test fixture video: ${result.stderr.toString("utf8")}`);
+    }
+    const trimResult = spawnSync("ffmpeg", [
+      "-y",
+      "-f",
+      "lavfi",
+      "-i",
+      "testsrc2=duration=6:size=320x240:rate=10",
+      "-pix_fmt",
+      "yuv420p",
+      trimSourceVideoPath,
+    ]);
+    if (trimResult.status !== 0) {
+      throw new Error(`Failed to generate the trim fixture video: ${trimResult.stderr.toString("utf8")}`);
     }
   });
 
@@ -55,6 +70,16 @@ describe.skipIf(!ffmpegAvailable)("extractPosterFrame", () => {
     expect(bytes[1]).toBe(0xd8);
   });
 
+  it("trims by copying encoded media and produces a decodable file with the requested duration", async () => {
+    const outputPath = join(workDir, "trimmed.mp4");
+    const startSeconds = 1.5;
+    const endSeconds = 4.25;
+    await trimMediaFile(trimSourceVideoPath, outputPath, startSeconds, endSeconds);
+    const duration = await verifyTrimmedMedia(outputPath, endSeconds - startSeconds);
+    expect(duration).toBeGreaterThan(1.5);
+    expect(duration).toBeLessThan(3.5);
+    expect(await probeMediaDuration(outputPath)).toBe(duration);
+  }, 30_000);
   it("rejects with FfmpegError for a source file that does not exist", async () => {
     await expect(
       extractPosterFrame(join(workDir, "does-not-exist.mp4"), join(workDir, "unused.jpg")),

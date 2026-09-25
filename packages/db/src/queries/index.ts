@@ -8,6 +8,10 @@ export {
   updateRecordingMetadata,
   deleteRecordingRow,
   setRecordingPosterKey,
+  requestRecordingTrim,
+  setTrimProcessing,
+  setTrimReady,
+  setTrimFailed,
   createRecording,
 } from "./recordings.js";
 export type { RecordingMetadataPatch } from "./recordings.js";

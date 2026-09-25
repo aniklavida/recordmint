@@ -42,7 +42,7 @@ The job queue, transcripts on the host, poster frames, retention sweeps, and del
 
 Timestamped comments and timeline markers, guest commenting, reactions, view counts, download, trim.
 
-**Done:** a comment seeks the player when clicked, and guest commenting is off unless deliberately enabled.
+**Done:** a comment seeks the player when clicked, and guest commenting is off unless deliberately enabled. Start/end trim is a background stream-copy remux; the derived file is verified before playback switches, and the original is never deleted or overwritten.
 
 ## 7 · Self-hosting, documentation and release
 
