@@ -12,11 +12,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ rec
     const { recordingId } = await params;
     const user = await requireUser();
     const body = await request.json();
-    const parts = body.parts;
+    const rawParts = body.parts;
     
-    if (!Array.isArray(parts)) {
+    if (!Array.isArray(rawParts)) {
       throw new AppError("VALIDATION_ERROR", "parts must be an array.");
     }
+
+    const parts = rawParts.map((part: Record<string, unknown>) => ({
+      partNumber: Number(part.partNumber ?? part.PartNumber),
+      eTag: String(part.eTag ?? part.ETag ?? ""),
+    }));
     
     const db = getDb();
     const recording = await getRecordingForMember(db.orm, { recordingId, userId: user.id });

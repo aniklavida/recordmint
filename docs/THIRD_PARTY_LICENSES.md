@@ -1,6 +1,6 @@
 # Third-party licence audit
 
-**Last verified: 2026-09-15.** This inventory is regenerated and re-checked at every release, not trusted from a prior note — see [`scripts/check-licenses.mjs`](../scripts/check-licenses.mjs), which CI runs on every push and pull request.
+**Last verified: 2026-09-28.** This inventory is regenerated and re-checked at every release, not trusted from a prior note — see [`scripts/check-licenses.mjs`](../scripts/check-licenses.mjs), which CI runs on every push and pull request.
 
 ## Why this file exists
 
@@ -21,20 +21,22 @@ Anything reciprocal-for-consumers in the compiled class — RPL, SSPL, RSAL, BSL
 
 Every entry was checked against the package's own published metadata or licence file, not an aggregator or memory:
 
-- **npm packages** — resolved from the committed `pnpm-lock.yaml` against the installed `node_modules` tree with `pnpm licenses list --json`, which reads each package's own `package.json` `license` field. The eight direct, most consequential compiled dependencies (`next`, `react`, `react-dom`, `drizzle-orm`, `pg-boss`, `postgres`, `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, `nanoid`) were additionally spot-checked by reading the bundled `LICENSE` file text in `node_modules` directly.
+- **npm packages** — resolved from the committed `pnpm-lock.yaml` against the installed `node_modules` tree with `pnpm licenses list --json`, which reads each package's own `package.json` `license` field. The direct, most consequential compiled dependencies (`next`, `react`, `react-dom`, `@node-rs/argon2`, `plyr`, `drizzle-orm`, `pg-boss`, `postgres`, `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`, `nanoid`) were additionally spot-checked by reading the bundled `LICENSE` file text in `node_modules` directly.
 - **Container images** — resolved from the image tag's registry manifest digest (Docker Hub / quay.io API), and the licence read from the project's own `LICENSE` file in its source repository at the corresponding release tag.
-- **`(†)`** marks the `@next/swc-*` platform binaries that are optional per-architecture builds of the Next.js compiler. Only the host-matching one (`@next/swc-darwin-arm64` on this development machine) is actually installed; the others were verified directly against their published npm registry metadata, which carries the same MIT licence as the rest of the Next.js release.
+- **`(†)`** marks platform binaries (`@next/swc-*` for Next.js compiler, `@node-rs/argon2-*` for Argon2) that are optional per-architecture builds. Only the host-matching ones (`@next/swc-darwin-arm64`, `@node-rs/argon2-darwin-arm64` on this development machine) are actually installed; the others were verified directly against their published npm registry metadata, which carry the same MIT licence as their respective root packages.
 
 ## Compiled class — shipped in `apps/web` and `apps/worker`
 
-84 packages, direct and transitive, across every `dependencies` (not `devDependencies`) entry in the six workspace members (`apps/web`, `apps/worker`, `packages/db`, `packages/storage`, `packages/shared`, `packages/recorder`). **All are MIT, MIT-0, Apache-2.0, BSD-3-Clause, ISC, Unlicense, 0BSD, or dual-licensed MIT/CC0-1.0 — every one clears the compiled-class bar.** `caniuse-lite`'s CC-BY-4.0 covers only its bundled browser-compatibility *data* (used at build time by Next.js/`browserslist`, not executed at runtime); see [Attribution](#attribution) below for what that requires. `nodemailer` is the one dependency in this table under **MIT-0** ("MIT No Attribution"): its own bundled `LICENSE` carries the standard MIT text with the attribution/notice-inclusion clause removed, which is strictly more permissive than MIT, not less — verified 14 Sep 2026 by reading `node_modules/nodemailer/LICENSE` directly.
+88 packages, direct and transitive, across every `dependencies` (not `devDependencies`) entry in the six workspace members (`apps/web`, `apps/worker`, `packages/db`, `packages/storage`, `packages/shared`, `packages/recorder`). **All are MIT, MIT-0, Apache-2.0, BSD-3-Clause, ISC, Unlicense, 0BSD, or dual-licensed MIT/CC0-1.0 — every one clears the compiled-class bar.** `caniuse-lite`'s CC-BY-4.0 covers only its bundled browser-compatibility *data* (used at build time by Next.js/`browserslist`, not executed at runtime); see [Attribution](#attribution) below for what that requires. `nodemailer` is the one dependency in this table under **MIT-0** ("MIT No Attribution"): its own bundled `LICENSE` carries the standard MIT text with the attribution/notice-inclusion clause removed, which is strictly more permissive than MIT, not less — verified 14 Sep 2026 by reading `node_modules/nodemailer/LICENSE` directly.
 
 Direct production dependencies, by workspace member:
 
 | Workspace | Dependency | Version (`package.json`) | Licence |
 |---|---|---|---|
-| `apps/web` | `next` | ^14.2.13 | MIT |
+| `apps/web` | `@node-rs/argon2` | ^2.0.2 | MIT |
+| `apps/web` | `next` | 16.3.5 | MIT |
 | `apps/web` | `pg-boss` | ^10.1.5 | MIT |
+| `apps/web` | `plyr` | ^3.8.4 | MIT |
 | `apps/web` | `react` | ^18.3.1 | MIT |
 | `apps/web` | `react-dom` | ^18.3.1 | MIT |
 | `apps/worker` | `pg-boss` | ^10.1.5 | MIT |
@@ -47,7 +49,7 @@ Direct production dependencies, by workspace member:
 | `packages/shared` | `nodemailer` | ^10.0.9 | MIT-0 |
 | `packages/recorder` | *(none — web platform APIs only)* | — | — |
 
-Full transitive compiled-class tree (package, resolved version, licence), verified 2026-09-13:
+Full transitive compiled-class tree (package, resolved version, licence), verified 2026-09-28:
 
 | Package | Version | Licence |
 |---|---|---|
@@ -70,45 +72,49 @@ Full transitive compiled-class tree (package, resolved version, licence), verifi
 | `@aws-sdk/types` | 3.974.5 | Apache-2.0 |
 | `@aws-sdk/xml-builder` | 3.972.40 | Apache-2.0 |
 | `@aws/lambda-invoke-store` | 0.3.0 | Apache-2.0 |
-| `@next/env` | 14.2.35 | MIT |
-| `@next/swc-darwin-arm64` | 14.2.33 | MIT |
-| `@next/swc-darwin-x64` | 14.2.33 | MIT † |
-| `@next/swc-linux-arm64-gnu` | 14.2.33 | MIT † |
-| `@next/swc-linux-arm64-musl` | 14.2.33 | MIT † |
-| `@next/swc-linux-x64-gnu` | 14.2.33 | MIT † |
-| `@next/swc-linux-x64-musl` | 14.2.33 | MIT † |
-| `@next/swc-win32-arm64-msvc` | 14.2.33 | MIT † |
-| `@next/swc-win32-ia32-msvc` | 14.2.33 | MIT † |
-| `@next/swc-win32-x64-msvc` | 14.2.33 | MIT † |
-| `@playwright/test` | 1.63.0 | Apache-2.0 |
+| `@next/env` | 16.3.5 | MIT |
+| `@next/swc-darwin-arm64` | 16.3.5 | MIT |
+| `@next/swc-darwin-x64` | 16.3.5 | MIT † |
+| `@next/swc-linux-arm64-gnu` | 16.3.5 | MIT † |
+| `@next/swc-linux-arm64-musl` | 16.3.5 | MIT † |
+| `@next/swc-linux-x64-gnu` | 16.3.5 | MIT † |
+| `@next/swc-linux-x64-musl` | 16.3.5 | MIT † |
+| `@next/swc-win32-arm64-msvc` | 16.3.5 | MIT † |
+| `@next/swc-win32-x64-msvc` | 16.3.5 | MIT † |
+| `@node-rs/argon2` | 2.2.1 | MIT |
+| `@node-rs/argon2-darwin-arm64` | 2.2.1 | MIT |
+| `@node-rs/argon2-darwin-x64` | 2.2.1 | MIT † |
+| `@node-rs/argon2-linux-arm64-gnu` | 2.2.1 | MIT † |
+| `@node-rs/argon2-linux-arm64-musl` | 2.2.1 | MIT † |
+| `@node-rs/argon2-linux-x64-gnu` | 2.2.1 | MIT † |
+| `@node-rs/argon2-linux-x64-musl` | 2.2.1 | MIT † |
+| `@node-rs/argon2-win32-arm64-msvc` | 2.2.1 | MIT † |
+| `@node-rs/argon2-win32-x64-msvc` | 2.2.1 | MIT † |
 | `@smithy/core` | 3.34.1 | Apache-2.0 |
 | `@smithy/credential-provider-imds` | 4.5.2 | Apache-2.0 |
 | `@smithy/fetch-http-handler` | 5.8.0 | Apache-2.0 |
 | `@smithy/node-http-handler` | 4.12.1 | Apache-2.0 |
 | `@smithy/signature-v4` | 5.7.3 | Apache-2.0 |
 | `@smithy/types` | 4.18.0 | Apache-2.0 |
-| `@swc/counter` | 0.1.3 | Apache-2.0 |
-| `@swc/helpers` | 0.5.5 | Apache-2.0 |
-| `@types/prop-types` | 15.7.15 | MIT |
-| `@types/react` | 18.3.31 | MIT |
+| `@swc/helpers` | 0.5.23 | Apache-2.0 |
+| `baseline-browser-mapping` | 2.11.23 | Apache-2.0 |
 | `bowser` | 2.14.1 | MIT |
-| `busboy` | 1.6.0 | MIT |
 | `caniuse-lite` | 1.0.30001810 | CC-BY-4.0 |
 | `client-only` | 0.0.1 | MIT |
+| `core-js` | 3.50.0 | MIT |
 | `cron-parser` | 4.9.0 | MIT |
-| `csstype` | 3.2.3 | MIT |
+| `custom-event-polyfill` | 1.0.7 | MIT |
 | `drizzle-orm` | 0.45.2 | Apache-2.0 |
-| `graceful-fs` | 4.2.11 | ISC |
 | `js-tokens` | 4.0.0 | MIT |
+| `loadjs` | 4.3.0 | MIT |
 | `loose-envify` | 1.4.0 | MIT |
 | `luxon` | 3.7.2 | MIT |
 | `nanoid` | 3.3.19 | MIT |
 | `nanoid` | 5.1.16 | MIT |
-| `next` | 14.2.35 | MIT |
+| `next` | 16.3.5 | MIT |
 | `nodemailer` | 10.0.9 | MIT-0 |
 | `pg` | 8.23.0 | MIT |
 | `pg-boss` | 10.4.2 | MIT |
-| `pg-cloudflare` | 1.4.0 | MIT |
 | `pg-connection-string` | 2.14.0 | MIT |
 | `pg-int8` | 1.0.1 | ISC |
 | `pg-pool` | 3.14.0 | MIT |
@@ -116,24 +122,24 @@ Full transitive compiled-class tree (package, resolved version, licence), verifi
 | `pg-types` | 2.2.0 | MIT |
 | `pgpass` | 1.0.5 | MIT |
 | `picocolors` | 1.1.1 | ISC |
-| `playwright` | 1.63.0 | Apache-2.0 |
-| `playwright-core` | 1.63.0 | Apache-2.0 |
-| `postcss` | 8.4.31 | MIT |
+| `plyr` | 3.8.4 | MIT |
+| `postcss` | 8.5.23 | MIT |
 | `postgres` | 3.4.9 | Unlicense |
 | `postgres-array` | 2.0.0 | MIT |
 | `postgres-bytea` | 1.0.1 | MIT |
 | `postgres-date` | 1.0.7 | MIT |
 | `postgres-interval` | 1.2.0 | MIT |
+| `rangetouch` | 2.0.1 | MIT |
 | `react` | 18.3.1 | MIT |
 | `react-dom` | 18.3.1 | MIT |
 | `scheduler` | 0.23.2 | MIT |
 | `serialize-error` | 8.1.0 | MIT |
 | `source-map-js` | 1.2.1 | BSD-3-Clause |
 | `split2` | 4.2.0 | ISC |
-| `streamsearch` | 1.1.0 | MIT |
-| `styled-jsx` | 5.1.1 | MIT |
+| `styled-jsx` | 5.1.6 | MIT |
 | `tslib` | 2.8.1 | 0BSD |
 | `type-fest` | 0.20.2 | (MIT OR CC0-1.0) |
+| `url-polyfill` | 1.1.14 | MIT |
 | `xtend` | 4.0.2 | MIT |
 
 ## Build and CI tooling — held to the same bar, because it ships too
