@@ -41,6 +41,15 @@ async function startQueue(): Promise<PgBoss> {
     retryBackoff: true,
     deadLetter: `${QUEUE_NAMES.trim}-dead-letter`,
   });
+  if (process.env.TRANSCRIPTION_ENABLED === "true") {
+    await instance.createQueue(`${QUEUE_NAMES.transcript}-dead-letter`);
+    await instance.createQueue(QUEUE_NAMES.transcript, {
+      name: QUEUE_NAMES.transcript,
+      retryLimit: 3,
+      retryBackoff: true,
+      deadLetter: `${QUEUE_NAMES.transcript}-dead-letter`,
+    });
+  }
   return instance;
 }
 

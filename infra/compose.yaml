@@ -106,7 +106,7 @@ services:
       S3_SECRET_ACCESS_KEY: minioadmin123
       S3_FORCE_PATH_STYLE: "true"
       TRANSCRIPTION_ENABLED: "false"
-      WHISPER_MODEL: base
+      WHISPER_MODEL:
 
 volumes:
   pgdata:

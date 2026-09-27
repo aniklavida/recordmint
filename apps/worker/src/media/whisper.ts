@@ -1,4 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 
 /**
  * whisper.cpp by default, faster-whisper where a GPU exists — both MIT,
@@ -41,9 +42,20 @@ export class TranscriptionError extends Error {
 }
 
 /** A cheap, side-effect-free presence check before committing a job to a binary that probably is not installed. */
-export function isWhisperBinaryAvailable(): boolean {
+export function assertWhisperBinaryAvailable(): void {
   const result = spawnSync(WHISPER_BINARY, ["--help"], { stdio: "ignore" });
-  return result.error === undefined && result.status !== null;
+  if (result.error !== undefined || result.status !== 0) {
+    throw new TranscriptionUnavailableError(WHISPER_BINARY, result.error);
+  }
+}
+
+export function isWhisperBinaryAvailable(): boolean {
+  try {
+    assertWhisperBinaryAvailable();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -55,15 +67,13 @@ export function isWhisperBinaryAvailable(): boolean {
  * thin CLI shim presenting the same interface, which is a packaging
  * detail for whoever deploys it, not something this repository ships.
  */
-export async function transcribeToVtt(inputPath: string, outputVttPath: string, modelSize: string): Promise<void> {
-  if (!isWhisperBinaryAvailable()) {
-    throw new TranscriptionUnavailableError(WHISPER_BINARY);
-  }
+export async function transcribeToVtt(inputPath: string, outputVttPath: string, modelPath: string): Promise<void> {
+  assertWhisperBinaryAvailable();
 
   return new Promise((resolve, reject) => {
     const child = spawn(WHISPER_BINARY, [
       "-m",
-      modelSize,
+      modelPath,
       "-f",
       inputPath,
       "--output-vtt",
@@ -78,8 +88,10 @@ export async function transcribeToVtt(inputPath: string, outputVttPath: string, 
       reject(new TranscriptionUnavailableError(WHISPER_BINARY, error));
     });
     child.on("close", (code) => {
-      if (code === 0) {
+      if (code === 0 && existsSync(outputVttPath)) {
         resolve();
+      } else if (code === 0) {
+        reject(new TranscriptionError(`${WHISPER_BINARY} exited without writing ${outputVttPath}`, 0, stderr));
       } else {
         reject(new TranscriptionError(`${WHISPER_BINARY} exited with code ${code}`, code, stderr));
       }

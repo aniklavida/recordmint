@@ -5,6 +5,7 @@ import { requireUser } from "../../../../../auth/guards";
 import { getDb } from "../../../../../lib/db";
 import { getStorageClient, getStorageConfig } from "../../../../../lib/storage";
 import { toErrorResponse } from "../../../../../lib/error-response";
+import { enqueueTranscript } from "../../../../../features/recording/application/transcript";
 
 export async function POST(request: Request, { params }: { params: Promise<{ recordingId: string }> }): Promise<Response> {
   try {
@@ -45,7 +46,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ rec
       durationSeconds: body.durationSeconds,
       sizeBytes: body.sizeBytes,
     });
-    
+
+    await enqueueTranscript(recordingId);
+
     return Response.json({ ok: true });
   } catch (error) {
     return toErrorResponse(error);

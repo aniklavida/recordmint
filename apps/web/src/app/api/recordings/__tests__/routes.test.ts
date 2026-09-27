@@ -9,12 +9,14 @@ import * as storage from "@recordmint/storage";
 import * as guards from "../../../../auth/guards";
 import * as libDb from "../../../../lib/db";
 import * as libStorage from "../../../../lib/storage";
+import * as transcriptApplication from "../../../../features/recording/application/transcript";
 
 vi.mock("@recordmint/db");
 vi.mock("@recordmint/storage");
 vi.mock("../../../../auth/guards");
 vi.mock("../../../../lib/db");
 vi.mock("../../../../lib/storage");
+vi.mock("../../../../features/recording/application/transcript");
 
 describe("Recording API Routes", () => {
   beforeEach(() => {
@@ -29,6 +31,7 @@ describe("Recording API Routes", () => {
     vi.mocked(libStorage.getStorageConfig).mockReturnValue(
       { bucket: "recordmint" } as unknown as ReturnType<typeof libStorage.getStorageConfig>,
     );
+    vi.mocked(transcriptApplication.enqueueTranscript).mockResolvedValue(undefined);
   });
 
   describe("Gap 1.1: Authorization boundary on parts and complete", () => {
@@ -176,6 +179,7 @@ describe("Recording API Routes", () => {
         from: "uploading",
         to: "ready"
       }));
+      expect(transcriptApplication.enqueueTranscript).toHaveBeenCalledWith("rec-123");
     });
   });
 });
