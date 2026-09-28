@@ -82,6 +82,7 @@ record → share → play flow arrives once capture and upload exist — see the
 - [Folder structure](docs/STRUCTURE.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Release checklist](docs/RELEASE_CHECKLIST.md)
+- [Self-hosting guide](docs/SELF_HOSTING.md)
 - [Third-party licence audit](docs/THIRD_PARTY_LICENSES.md)
 
 ## Licence

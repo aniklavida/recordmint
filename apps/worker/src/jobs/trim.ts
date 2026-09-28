@@ -5,9 +5,9 @@ import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { getRecordingById, setTrimFailed, setTrimProcessing, setTrimReady } from "@recordmint/db";
 import { getObjectStream, putObject, trimmedKey } from "@recordmint/storage";
-import { getDb } from "../lib/db";
-import { getStorageClient, getStorageConfig } from "../lib/storage";
-import { trimMediaFile, verifyTrimmedMedia } from "../media/ffmpeg";
+import { getDb } from "../lib/db.js";
+import { getStorageClient, getStorageConfig } from "../lib/storage.js";
+import { trimMediaFile, verifyTrimmedMedia } from "../media/ffmpeg.js";
 
 export interface TrimJobData {
   recordingId: string;
