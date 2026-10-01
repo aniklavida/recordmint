@@ -1,4 +1,5 @@
 import { listWorkspacesForUser, recordingVisibilityEnum } from "@recordmint/db";
+import Link from "next/link";
 import { getCurrentUser } from "../../auth/session";
 import { LibraryList } from "../../features/recording/presentation/LibraryList";
 import { getDb } from "../../lib/db";
@@ -10,19 +11,18 @@ interface PageProps {
 }
 
 /**
- * `/library` — the signed-in library (SPEC.md §6): a viewer's own
- * recordings, searchable, sorted, each linked to its player page. There
- * is no login page in this repository yet (only the API routes exist),
- * so an unauthenticated visitor gets a plain, honest message rather than
- * a broken or silently empty page.
+ * `/library` — the signed-in library: a viewer's own recordings,
+ * searchable, sorted, each linked to its player page.
  */
 export default async function LibraryPage({ searchParams }: PageProps) {
   const user = await getCurrentUser();
   if (!user) {
     return (
-      <main>
-        <h1>Library</h1>
-        <p>Sign in to see your recordings.</p>
+      <main className="library-container">
+        <div className="state-card">
+          <h1>Library</h1>
+          <p>Sign in to see your recordings.</p>
+        </div>
       </main>
     );
   }
@@ -30,9 +30,11 @@ export default async function LibraryPage({ searchParams }: PageProps) {
   const memberships = await listWorkspacesForUser(getDb().orm, user.id);
   if (memberships.length === 0) {
     return (
-      <main>
-        <h1>Library</h1>
-        <p>You do not belong to a workspace yet.</p>
+      <main className="library-container">
+        <div className="state-card">
+          <h1>Library</h1>
+          <p>You do not belong to a workspace yet.</p>
+        </div>
       </main>
     );
   }
@@ -41,28 +43,38 @@ export default async function LibraryPage({ searchParams }: PageProps) {
     memberships.find((row) => row.workspace.id === searchParams.workspaceId) ?? memberships[0]!;
 
   return (
-    <main>
+    <main className="library-container">
       <div className="page-header">
-        <h1>Library</h1>
-        <a href="/settings">Settings</a>
+        <div className="page-title-group">
+          <h1>Library</h1>
+          <span className="workspace-badge">{selected.workspace.name}</span>
+        </div>
+        <div className="page-actions">
+          <Link href="/record" className="btn btn-primary">
+            Record
+          </Link>
+          <Link href="/settings" className="btn btn-secondary">
+            Settings
+          </Link>
+        </div>
       </div>
       {memberships.length > 1 ? (
-        <nav aria-label="Workspaces">
-          <ul>
+        <nav aria-label="Workspaces" className="workspace-nav">
+          <ul className="workspace-tabs">
             {memberships.map((row) => (
               <li key={row.workspace.id}>
                 {row.workspace.id === selected.workspace.id ? (
-                  <strong>{row.workspace.name}</strong>
+                  <strong className="workspace-tab active">{row.workspace.name}</strong>
                 ) : (
-                  <a href={`/library?workspaceId=${row.workspace.id}`}>{row.workspace.name}</a>
+                  <Link href={`/library?workspaceId=${row.workspace.id}`} className="workspace-tab">
+                    {row.workspace.name}
+                  </Link>
                 )}
               </li>
             ))}
           </ul>
         </nav>
-      ) : (
-        <p>{selected.workspace.name}</p>
-      )}
+      ) : null}
       <LibraryList
         workspaceId={selected.workspace.id}
         membershipRole={selected.role}

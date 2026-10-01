@@ -60,7 +60,7 @@ export default async function PlayerPage({ params }: PageProps) {
 
   if (resolution.state === "password_required") {
     return (
-      <main>
+      <main className="player-container">
         <PasswordGate publicId={publicId} title={resolution.title} incorrect={resolution.incorrect} isAuthenticated={Boolean(user)} />
       </main>
     );
@@ -68,7 +68,7 @@ export default async function PlayerPage({ params }: PageProps) {
 
   if (resolution.state === "in_progress") {
     return (
-      <main>
+      <main className="player-container">
         <InProgress publicId={publicId} title={resolution.title} isAuthenticated={Boolean(user)} />
       </main>
     );
@@ -112,7 +112,7 @@ export default async function PlayerPage({ params }: PageProps) {
   }
 
   return (
-    <main>
+    <main className="player-container">
       <RecordingViewer
         publicId={publicId}
         playUrl={resolution.playUrl}
