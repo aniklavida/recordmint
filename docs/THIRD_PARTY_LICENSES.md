@@ -34,6 +34,7 @@ Direct production dependencies, by workspace member:
 | Workspace | Dependency | Version (`package.json`) | Licence |
 |---|---|---|---|
 | `apps/web` | `@node-rs/argon2` | ^2.0.2 | MIT |
+| `apps/web` | `lucide-react` | ^1.49.0 | ISC |
 | `apps/web` | `next` | 16.3.5 | MIT |
 | `apps/web` | `pg-boss` | ^10.1.5 | MIT |
 | `apps/web` | `plyr` | ^3.8.4 | MIT |
@@ -48,6 +49,16 @@ Direct production dependencies, by workspace member:
 | `packages/shared` | `nanoid` | ^5.0.7 | MIT |
 | `packages/shared` | `nodemailer` | ^10.0.9 | MIT-0 |
 | `packages/recorder` | *(none — web platform APIs only)* | — | — |
+
+### Self-hosted font assets — compiled via `next/font`
+
+Font files are downloaded at build time and served directly as self-hosted static assets by Next.js, making zero external network requests at runtime:
+
+| Font family | Shipped in | Upstream source | Licence |
+|---|---|---|---|
+| `Inter Tight` | `apps/web` | Rasmus Andersson / Google Fonts | SIL Open Font License 1.1 (OFL-1.1) |
+| `Source Sans 3` | `apps/web` | Adobe / Google Fonts | SIL Open Font License 1.1 (OFL-1.1) |
+
 
 Full transitive compiled-class tree (package, resolved version, licence), verified 2026-09-28:
 
