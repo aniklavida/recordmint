@@ -1,0 +1,14 @@
+{
+  "identities": [
+    {
+      "name": "recordmint-local-development",
+      "credentials": [
+        {
+          "accessKey": "recordmintdev",
+          "secretKey": "recordmint-dev-secret"
+        }
+      ],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

@@ -49,8 +49,8 @@ export interface PresignReadOptions {
  * player adding `Range: bytes=...` to its `fetch`/`<video>` request against
  * this same URL is unaffected by the signature and the store answers it
  * with a normal 206 Partial Content — the caller does not need a
- * range-specific presign. Verified against a live MinIO instance (see
- * `__tests__/live.test.ts`): a non-zero-start range on a presigned GET
+ * range-specific presign. Verified against a live SeaweedFS 4.48 instance
+ * (see `__tests__/live.test.ts`): a non-zero-start range on a presigned GET
  * returned 206 with the correct `Content-Range` and bytes.
  */
 export async function presignRead(

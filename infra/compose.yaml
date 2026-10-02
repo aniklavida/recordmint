@@ -1,4 +1,4 @@
-# Four processes, two stores — web, worker, Postgres, MinIO. No Redis, no
+# Four processes, two stores — web, worker, Postgres, SeaweedFS. No Redis, no
 # broker, no transcoding tier: the job queue rides on the Postgres that is
 # already here, and the browser records a file that already plays everywhere,
 # so a self-hoster runs, backs up and restores two services instead of five.
@@ -7,12 +7,16 @@
 # reusing these values.
 #
 # Every image below is pinned to an exact tag and digest, verified in
-# docs/THIRD_PARTY_LICENSES.md. Postgres and MinIO are separate-process
-# dependencies (AGPL-3.0 for MinIO is fine here — see AGENTS.md's two-class
-# rule); pinning is about reproducibility and availability, not licence.
-# MinIO discontinued free Docker Hub distribution during 2025 — `minio/minio`
-# and `minio/mc` are gone from Docker Hub entirely, so both now pull from
-# their quay.io mirror instead.
+# docs/THIRD_PARTY_LICENSES.md. Postgres and SeaweedFS are separate-process
+# dependencies (AGENTS.md's two-class rule); SeaweedFS is Apache-2.0, so it
+# clears even the stricter "compiled into shipped code" bar, and it runs as
+# its own process here regardless. Pinning is about reproducibility and
+# availability, not licence.
+#
+# SeaweedFS speaks the S3 API, so nothing in packages/storage knows what is
+# behind S3_ENDPOINT. The access key and secret below come from
+# seaweedfs/s3-identity.json, which grants them to a named identity and
+# defines no anonymous one — that is what keeps the bucket private.
 name: recordmint
 
 services:
@@ -32,36 +36,60 @@ services:
       timeout: 5s
       retries: 10
 
-  minio:
-    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
+  # One process runs the whole store: master, volume server, filer and the S3
+  # gateway, each in its own goroutine, which is what keeps this stack at four
+  # processes rather than seven. Only the S3 port is published — the master,
+  # volume and filer ports are internal, and a self-hoster's browser only ever
+  # talks S3.
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d
+    command:
+      - server
+      - -dir=/data
+      - -filer
+      - -s3
+      - -s3.port=8333
+      - -s3.config=/etc/recordmint/s3-identity.json
+      # No usage statistics leave a self-hoster's machine.
+      - -master.telemetry=false
     volumes:
-      - minio-data:/data
+      - seaweedfs-data:/data
+      - ./seaweedfs/s3-identity.json:/etc/recordmint/s3-identity.json:ro
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "8333:8333"
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      # `curl` is installed in this image. The filer is what the S3 gateway is
+      # backed by, so a 200 here means an S3 request can actually be served.
+      # The S3 port itself answers an unsigned request with 403 by design — the
+      # bucket is private — which `curl -f` would read as a failure.
+      test: ["CMD-SHELL", "curl -sf http://localhost:8888/ > /dev/null"]
       interval: 5s
       timeout: 5s
       retries: 10
+      start_period: 10s
 
-  minio-init:
-    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
+  # Creates the bucket and applies its CORS policy through the plain S3 API
+  # (CreateBucket, PutBucketCors), so it works against any S3-compatible store
+  # and not just this one. Idempotent, and it retries while the store is still
+  # coming up. It reuses the repository's own built image so it carries the
+  # same AWS SDK packages/storage already depends on — no second Node image,
+  # no vendor-specific client binary.
+  s3-init:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.web
     depends_on:
-      minio:
+      seaweedfs:
         condition: service_healthy
     environment:
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
-      MINIO_BUCKET: recordmint
-    entrypoint: ["/bin/sh", "/bootstrap/create-bucket.sh"]
-    volumes:
-      - ./minio/create-bucket.sh:/bootstrap/create-bucket.sh:ro
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://seaweedfs:8333}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_BUCKET: ${S3_BUCKET:-recordmint}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-recordmintdev}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-recordmint-dev-secret}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-true}
+      S3_CORS_ORIGINS: ${S3_CORS_ORIGINS:-*}
+    entrypoint: ["node", "/app/infra/seaweedfs/bootstrap-bucket.mjs"]
     restart: "no"
 
   web:
@@ -71,15 +99,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      minio-init:
+      s3-init:
         condition: service_completed_successfully
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgres://recordmint:recordmint@postgres:5432/recordmint}
-      S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://seaweedfs:8333}
       S3_REGION: ${S3_REGION:-us-east-1}
       S3_BUCKET: ${S3_BUCKET:-recordmint}
-      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
-      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin123}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-recordmintdev}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-recordmint-dev-secret}
       S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-true}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
       SESSION_SECRET: ${SESSION_SECRET:-local-development-only-secret-do-not-use-in-production}
@@ -95,19 +123,19 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      minio-init:
+      s3-init:
         condition: service_completed_successfully
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgres://recordmint:recordmint@postgres:5432/recordmint}
-      S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://seaweedfs:8333}
       S3_REGION: ${S3_REGION:-us-east-1}
       S3_BUCKET: ${S3_BUCKET:-recordmint}
-      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
-      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin123}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-recordmintdev}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-recordmint-dev-secret}
       S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-true}
       TRANSCRIPTION_ENABLED: ${TRANSCRIPTION_ENABLED:-false}
       WHISPER_MODEL: ${WHISPER_MODEL:-}
 
 volumes:
   pgdata:
-  minio-data:
+  seaweedfs-data:

@@ -16,12 +16,12 @@
 //
 // A container image started by infra/compose.yaml is a different case: it
 // runs as its own operating-system process and is never linked into this
-// code, so copyleft is acceptable there (AGPL-3.0 MinIO is the reason this
-// split exists at all). That class is instead checked for two things: the
-// image is pinned to an exact tag and digest (a floating tag can resolve to
-// a different, unaudited licence tomorrow — see the finding below), and its
-// audited licence isn't one of the reciprocal-for-consumers licences that
-// are rejected regardless of which class they land in.
+// code, so copyleft is acceptable there. That class is instead checked for
+// two things: the image is pinned to an exact tag and digest (a floating tag
+// can resolve to a different, unaudited licence tomorrow — see the
+// redis:7-alpine example above), and its audited licence isn't one of the
+// reciprocal-for-consumers licences that are rejected regardless of which
+// class they land in.
 //
 // Zero runtime dependencies — Node built-ins only, so this check never needs
 // its own licence audit.
@@ -205,8 +205,7 @@ for (const { name, version, license } of resolved.values()) {
 // audit actually knows about.
 const AUDITED_PROCESS_IMAGES = {
   postgres: { license: 'PostgreSQL Licence' },
-  'quay.io/minio/minio': { license: 'AGPL-3.0' },
-  'quay.io/minio/mc': { license: 'AGPL-3.0' },
+  'chrislusf/seaweedfs': { license: 'Apache-2.0' },
 };
 
 const composePath = p('infra', 'compose.yaml');
@@ -218,7 +217,7 @@ if (existsSync(composePath)) {
     const ref = match[1];
     const atDigest = ref.indexOf('@sha256:');
     if (atDigest === -1) {
-      fail(`UNPINNED IMAGE: "${ref}" in infra/compose.yaml has no "@sha256:" digest. A tag alone can silently start resolving to a different, unaudited licence — see the redis:7-alpine finding recorded in docs/THIRD_PARTY_LICENSES.md.`);
+      fail(`UNPINNED IMAGE: "${ref}" in infra/compose.yaml has no "@sha256:" digest. A tag alone can silently start resolving to a different, unaudited licence — see the redis:7-alpine example above.`);
       continue;
     }
     const beforeDigest = ref.slice(0, atDigest);

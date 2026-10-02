@@ -20,11 +20,11 @@ import { presignRead } from "../presign.js";
 /**
  * Exercises this package's actual claims against a real S3-compatible store.
  * Skipped without S3_ENDPOINT for the same reason packages/db skips its
- * Postgres-dependent tests without DATABASE_URL — CI has no live MinIO —
- * but this file is what was actually run, against a real MinIO container,
- * as the evidence behind those claims. Nothing here prints or persists a
- * signed URL: every assertion reads status codes, headers and bytes,
- * never the URL string itself
+ * Postgres-dependent tests without DATABASE_URL — CI has no live object store
+ * in the unit-test job — but this file is what was actually run, against a
+ * real SeaweedFS 4.48 process, as the evidence behind those claims. Nothing
+ * here prints or persists a signed URL: every assertion reads status codes,
+ * headers and bytes, never the URL string itself
  * (this repo's own CI rejects a committed signed-URL query parameter —
  * see `.github/workflows/validate.yml`'s "Reject presigned storage URLs"
  * step — so a signed URL must never be logged, printed or asserted on).
@@ -44,7 +44,8 @@ describe.skipIf(!process.env.S3_ENDPOINT)("packages/storage against live S3-comp
 
   afterAll(async () => {
     // Best-effort cleanup; a failed test run leaving a few KB of test
-    // fixtures in a throwaway local MinIO is not worth failing the suite over.
+    // fixtures in a throwaway local object store is not worth failing the
+    // suite over.
     for (const key of createdKeys) {
       try {
         await client.send(new DeleteObjectCommand({ Bucket: config.bucket, Key: key }));

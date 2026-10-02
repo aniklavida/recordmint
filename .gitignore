@@ -34,7 +34,7 @@ models/
 # Local infrastructure state
 docker-compose.override.yml
 infra/.data/
-minio-data/
+seaweedfs-data/
 pgdata/
 
 # Editors and OS

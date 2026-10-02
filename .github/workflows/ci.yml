@@ -75,45 +75,47 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Start MinIO
-        # MinIO's image has no default CMD — it needs `server /data` passed
-        # explicitly, and GitHub Actions' `services:` block has no way to
-        # supply a container command (only `image`/`env`/`ports`/`options`
-        # docker-run flags), so a `services:` entry for it starts the
-        # container, gets no args, prints its own usage text and exits
-        # unhealthy. Running it directly with `docker run -d` and the
-        # required args, on the same `--network host` the bucket/CORS step
-        # already uses, is the fix — matching how `infra/compose.yaml`'s
-        # `minio` service passes `command: server /data --console-address ":9001"`.
+      - name: Start SeaweedFS
+        # GitHub Actions' `services:` block can only pass docker-run flags
+        # (`image`/`env`/`ports`/`options`) and no container command, so the
+        # store is started directly with `docker run -d` on `--network host`,
+        # matching how `infra/compose.yaml`'s `seaweedfs` service passes the
+        # same arguments to `weed server`.
         run: |
-          docker run -d --name minio --network host \
-            -e MINIO_ROOT_USER=minioadmin \
-            -e MINIO_ROOT_PASSWORD=minioadmin123 \
-            -e MINIO_API_CORS_ALLOW_ORIGIN="*" \
-            quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e \
-            server /data --console-address ":9001"
+          docker run -d --name seaweedfs --network host \
+            -v "$PWD/infra/seaweedfs/s3-identity.json:/etc/recordmint/s3-identity.json:ro" \
+            chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d \
+            server -dir=/data -filer -s3 -s3.port=8333 \
+            -s3.config=/etc/recordmint/s3-identity.json -master.telemetry=false
 
+          # The master opens its port before the volume server has registered
+          # with it, so the loop waits on the filer: that is what the S3
+          # gateway is backed by, and it is the last piece that has to be up
+          # before an S3 request can be served.
           for i in $(seq 1 30); do
-            if curl -sf http://localhost:9000/minio/health/live > /dev/null; then
-              echo "MinIO is ready."
+            if curl -sf http://localhost:8888/ > /dev/null; then
+              echo "SeaweedFS is ready."
               exit 0
             fi
-            echo "Waiting for MinIO to become ready ($i/30)..."
+            echo "Waiting for SeaweedFS to become ready ($i/30)..."
             sleep 2
           done
-          echo "MinIO did not become ready in time." >&2
-          docker logs minio || true
+          echo "SeaweedFS did not become ready in time." >&2
+          docker logs seaweedfs || true
           exit 1
 
-      - name: Initialize MinIO Bucket and CORS
-        run: |
-          docker run --rm --network host --entrypoint sh \
-            quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 \
-            -c "mc alias set local http://localhost:9000 minioadmin minioadmin123 && mc mb --ignore-existing local/recordmint && mc anonymous set none local/recordmint"
+      - name: Initialize bucket and CORS
+        # Plain S3 API (CreateBucket, PutBucketCors) through the AWS SDK this
+        # repository already depends on, so the same script runs against any
+        # S3-compatible store. It also retries while the store is settling.
+        run: node infra/seaweedfs/bootstrap-bucket.mjs
         env:
-          AWS_ACCESS_KEY_ID: minioadmin
-          AWS_SECRET_ACCESS_KEY: minioadmin123
-          AWS_DEFAULT_REGION: us-east-1
+          S3_ENDPOINT: http://localhost:8333
+          S3_REGION: us-east-1
+          S3_BUCKET: recordmint
+          S3_ACCESS_KEY_ID: recordmintdev
+          S3_SECRET_ACCESS_KEY: recordmint-dev-secret
+          S3_FORCE_PATH_STYLE: "true"
 
       - name: Run database migrations
         run: pnpm --filter @recordmint/db run db:migrate
@@ -124,11 +126,11 @@ jobs:
         run: pnpm run build
         env:
           DATABASE_URL: postgres://recordmint:recordmint@localhost:5432/recordmint
-          S3_ENDPOINT: http://localhost:9000
+          S3_ENDPOINT: http://localhost:8333
           S3_REGION: us-east-1
           S3_BUCKET: recordmint
-          S3_ACCESS_KEY_ID: minioadmin
-          S3_SECRET_ACCESS_KEY: minioadmin123
+          S3_ACCESS_KEY_ID: recordmintdev
+          S3_SECRET_ACCESS_KEY: recordmint-dev-secret
           S3_FORCE_PATH_STYLE: "true"
           PUBLIC_BASE_URL: http://localhost:3000
           SESSION_SECRET: local-development-only-secret-do-not-use-in-production
@@ -141,11 +143,11 @@ jobs:
           pnpm --filter @recordmint/web exec vitest run src/app/api/health/__tests__/route.live.test.ts src/features/recording/application/__tests__/manage.live.test.ts
         env:
           DATABASE_URL: postgres://recordmint:recordmint@localhost:5432/recordmint
-          S3_ENDPOINT: http://localhost:9000
+          S3_ENDPOINT: http://localhost:8333
           S3_REGION: us-east-1
           S3_BUCKET: recordmint
-          S3_ACCESS_KEY_ID: minioadmin
-          S3_SECRET_ACCESS_KEY: minioadmin123
+          S3_ACCESS_KEY_ID: recordmintdev
+          S3_SECRET_ACCESS_KEY: recordmint-dev-secret
           S3_FORCE_PATH_STYLE: "true"
           TRANSCRIPTION_ENABLED: "false"
 
@@ -153,11 +155,11 @@ jobs:
         run: pnpm run e2e
         env:
           DATABASE_URL: postgres://recordmint:recordmint@localhost:5432/recordmint
-          S3_ENDPOINT: http://localhost:9000
+          S3_ENDPOINT: http://localhost:8333
           S3_REGION: us-east-1
           S3_BUCKET: recordmint
-          S3_ACCESS_KEY_ID: minioadmin
-          S3_SECRET_ACCESS_KEY: minioadmin123
+          S3_ACCESS_KEY_ID: recordmintdev
+          S3_SECRET_ACCESS_KEY: recordmint-dev-secret
           S3_FORCE_PATH_STYLE: "true"
           PUBLIC_BASE_URL: http://localhost:3000
           SESSION_SECRET: local-development-only-secret-do-not-use-in-production

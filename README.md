@@ -30,7 +30,7 @@ No encoding farm, no job backlog, no "your video is processing" wall. `ffmpeg` i
 
 ## What comes wired
 
-**Essential** — screen, window and tab capture · camera and microphone · upload *while* recording, so the link exists before the file finishes · a share link per recording · a hosted player page that works for a logged-out viewer · your recording library · workspaces, members and roles · email and password auth · S3-compatible storage with MinIO in the compose file · `docker compose up` and it runs.
+**Essential** — screen, window and tab capture · camera and microphone · upload *while* recording, so the link exists before the file finishes · a share link per recording · a hosted player page that works for a logged-out viewer · your recording library · workspaces, members and roles · email and password auth · S3-compatible storage with SeaweedFS in the compose file · `docker compose up` and it runs.
 
 **Useful** — timestamped comments · transcripts generated on your own host · captions and in-recording search · link visibility controls, passwords and expiry · view counts · download the original · delete a recording and every object behind it · retention policy.
 
@@ -61,12 +61,20 @@ pnpm run typecheck
 pnpm run test
 ```
 
-`docker compose -f infra/compose.yaml up` starts Postgres, MinIO (with its
-bucket already created) and both application processes, using throwaway
+`docker compose -f infra/compose.yaml up` starts Postgres, SeaweedFS (with
+its bucket already created) and both application processes, using throwaway
 local-development credentials baked into `infra/compose.yaml` — not the
 values in `.env.example`, which are for a real deployment. The web app is
 then reachable at `http://localhost:3000`, and `/api/health` reports
 database, storage and transcription status.
+
+The store is SeaweedFS 4.48 and every S3 behaviour the app relies on —
+presigned multipart from the browser, ranged playback reads, expiry, a bucket
+that refuses anonymous access — has been run against a real SeaweedFS process.
+The container image itself is only ever started in CI, so its support is
+**experimental** until someone has brought the compose file up on a machine
+with Docker; see the status table in the
+[self-hosting guide](docs/SELF_HOSTING.md#implementation-status-and-truthfulness).
 
 `pnpm run e2e` runs the Playwright suite, which drives a browser with a
 fake capture device (`--use-fake-device-for-media-stream`) so recording

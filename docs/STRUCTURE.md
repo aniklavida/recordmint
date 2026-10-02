@@ -28,10 +28,10 @@ recordmint/
 │   ├── storage/              S3 client, presigning, multipart
 │   └── shared/               types, IDs, validation, errors
 ├── infra/
-│   ├── compose.yaml          web · worker · postgres · minio
+│   ├── compose.yaml          web · worker · postgres · seaweedfs
 │   ├── Dockerfile.web
 │   ├── Dockerfile.worker
-│   └── minio/                bucket bootstrap
+│   └── seaweedfs/            S3 identity file, bucket + CORS bootstrap
 ├── docs/
 ├── .github/
 └── e2e/                      Playwright, driving a fake capture device
@@ -165,7 +165,7 @@ recordings/<recordingId>/transcript.vtt
 
 One prefix per recording, so deletion is one prefix delete and retention is one list-and-delete. The moment a key is assembled by string concatenation somewhere else, deletion starts leaving orphans that nobody notices until the storage bill arrives.
 
-**Nothing outside this package knows which S3 implementation is behind it.** That is what makes MinIO locally and any bucket in production the same code path rather than two.
+**Nothing outside this package knows which S3 implementation is behind it.** That is what makes SeaweedFS locally and any bucket in production the same code path rather than two.
 
 ## `packages/shared`
 

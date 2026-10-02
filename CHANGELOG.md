@@ -4,15 +4,55 @@ All notable changes to RecordMint are documented here, following [Keep a Changel
 
 ## [Unreleased]
 
+### Changed
+
+- **The S3-compatible object store is now SeaweedFS (Apache-2.0), replacing the archived MinIO (AGPL-3.0), whose images could no longer be pulled and whose download endpoints return `410 Gone`.** The `e2e` CI job failed on every branch because of it, and a self-hoster could not pull the store at all. `infra/compose.yaml` now runs `chrislusf/seaweedfs:4.48`, pinned by tag and digest, as a single-process S3 gateway.
+
+  What the application speaks is unchanged: `packages/storage` still talks
+  plain S3, and `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`,
+  `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` and `S3_FORCE_PATH_STYLE` mean
+  exactly what they did.
+
+  **Self-hosters must update their `.env`.** The two bootstrap-only store
+  credentials that `.env.example` used to carry at the bottom of the file are
+  gone — they were the store's *root* user and password, not S3 credentials.
+  Use `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY` for the store's own
+  identity instead; `git diff` against `.env.example` shows exactly which
+  lines went. The compose file's own throwaway development credentials
+  changed with them, to `recordmintdev` / `recordmint-dev-secret`, and the
+  compose default endpoint is now `http://seaweedfs:8333`.
+
+  One application change was needed to make presigned uploads work: the AWS
+  SDK signs an optional trailing checksum into the query string of every
+  presigned `PUT`, carrying a placeholder value it cannot fill in because the
+  browser — not the SDK — writes the body. SeaweedFS reads that placeholder as
+  a real digest and answers a multipart part upload with `400 BadDigest`, so
+  `createStorageClient` now sets `requestChecksumCalculation: "WHEN_REQUIRED"`
+  and the checksum is only sent where an operation genuinely requires one. No
+  S3 operation in this codebase does.
+
 ### Added
+
+- `infra/seaweedfs/s3-identity.json` — the store's S3 identity file: one named
+  identity holding a throwaway local-development key pair, and **no anonymous
+  identity**, which is what keeps the bucket private.
+- `infra/seaweedfs/bootstrap-bucket.mjs` — idempotent bucket and CORS setup
+  through the plain S3 API (`CreateBucket`, `PutBucketCors`), replacing the
+  vendor-specific client script. It exposes `ETag` and allows `GET`/`PUT`/`HEAD`
+  for the browser, retries while the store is still starting, and can be
+  pointed at any S3-compatible endpoint.
+- `S3_CORS_ORIGINS` — comma-separated origins the bucket's CORS policy
+  allows. Read only by that bootstrap script. Compose defaults it to `*` for
+  local development; a real deployment should set its own `PUBLIC_BASE_URL`.
 
 - Product specification, architecture, folder structure, roadmap and release checklist.
 - Contributor and agent instructions.
 - pnpm workspace skeleton: `apps/web` (Next.js), `apps/worker`, and
   `packages/{recorder,db,storage,shared}`. Each package builds, typechecks
   and has real (if minimal) unit tests.
-- `infra/compose.yaml` — Postgres, MinIO with bucket bootstrap, and the two
-  application processes, all started with `docker compose up`.
+- `infra/compose.yaml` — Postgres, an S3-compatible object store with bucket
+  bootstrap, and the two application processes, all started with
+  `docker compose up`.
 - `.env.example` naming every configuration variable.
 - CI: build, lint, typecheck, unit tests, a dependency-direction check that
   keeps `packages/recorder` framework-free, and a Playwright job driving a
@@ -66,13 +106,9 @@ All notable changes to RecordMint are documented here, following [Keep a Changel
 
 ### Fixed
 
-- `infra/compose.yaml` pinned `minio/minio:latest` and `minio/mc:latest` on
-  Docker Hub. Both tags — and the `minio/minio` and `minio/mc` Docker Hub
-  repositories themselves — no longer exist; MinIO discontinued free Docker
-  Hub distribution during 2025. Repointed both images to their last publicly
-  available `quay.io` releases, pinned by tag and digest. `postgres:16-alpine`
-  is now pinned to the exact patch and digest it currently resolves to,
-  rather than floating across every 16.x release.
+- `postgres:16-alpine` floated across every 16.x patch release. It is now
+  pinned to the exact patch (`16.15`) and digest it currently resolves to,
+  rather than a floating tag.
 
 Nothing records or uploads yet, so there is no way to create a recording
 through the product itself. There is no release.
