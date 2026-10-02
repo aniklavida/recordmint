@@ -50,7 +50,7 @@ RecordMint answers all three by being permissively licensed, browser-only and se
 
 ### Essential
 
-Screen, window and tab capture · microphone capture · camera capture composited as a picture-in-picture bubble · tab audio capture · start, pause, resume and stop with a countdown · **upload while recording**, so the link exists before the file finishes · a share link per recording · a hosted player page that works for a logged-out viewer · title, description and thumbnail · a library of your recordings · workspaces with members and roles · email and password auth with sessions · S3-compatible storage with MinIO in the compose file · `docker compose up` and the product runs.
+Screen, window and tab capture · microphone capture · camera capture composited as a picture-in-picture bubble · tab audio capture · start, pause, resume and stop with a countdown · **upload while recording**, so the link exists before the file finishes · a share link per recording · a hosted player page that works for a logged-out viewer · title, description and thumbnail · a library of your recordings · workspaces with members and roles · email and password auth with sessions · S3-compatible storage with SeaweedFS in the compose file · `docker compose up` and the product runs.
 
 ### Useful
 
@@ -79,7 +79,7 @@ That removes the heaviest and most expensive component of a self-hosted video pl
   ┌──────────────────────┐            ┌────────────────────┐        ┌───────────┐
   │ getDisplayMedia      │            │ web app            │        │    S3     │
   │ getUserMedia         │──create──▶ │  sessions, library │        │ compatible│
-  │ MediaRecorder        │            │  player page       │        │  MinIO    │
+  │ MediaRecorder        │            │  player page       │        │ SeaweedFS │
   │   ↓ timeslice chunks │◀─presign── │  presign broker    │───────▶│  locally  │
   └───────┬──────────────┘            └─────────┬──────────┘        └────┬──────┘
           │                                     │                       │
@@ -127,7 +127,7 @@ Record MP4 (H.264 + AAC) where the browser reports support; fall back to WebM (V
 | Database | **PostgreSQL** | Boring on purpose. |
 | Migrations | **Drizzle** | TypeScript-native; migrations are plain SQL you can read. |
 | Job queue | **pg-boss**, on the same PostgreSQL | Removes an entire service from a self-hoster's compose file. A separate queue server for two background jobs is a tax on the operator. |
-| Object storage | **S3-compatible** | MinIO in compose, any bucket in production. |
+| Object storage | **S3-compatible** | SeaweedFS in compose, any bucket in production. |
 | Transcription | **whisper.cpp**, or **faster-whisper** where a GPU exists | Runs on the host. No API, no key. |
 | Media tooling | **ffmpeg**, invoked as a binary | Thumbnails, optional recompression, optional remux. |
 | Auth | Own session table, httpOnly cookie, Argon2id | See §12. |
@@ -147,7 +147,7 @@ recordmint/
 │   ├── db/           schema, migrations, queries
 │   ├── storage/      S3 client, presigning, multipart
 │   └── shared/       types, IDs, validation, errors
-├── infra/            compose.yaml · minio/ · postgres/
+├── infra/            compose.yaml · seaweedfs/ · postgres/
 └── docs/
 ```
 
@@ -245,13 +245,13 @@ Failure is non-fatal. A recording without a transcript is a normal recording.
 | hls.js | Apache-2.0 | compiled (planned) | **not yet a dependency of any workspace member** |
 | Tailwind CSS | — | compiled (planned) | **not yet a dependency of any workspace member** |
 | PostgreSQL (image) | PostgreSQL Licence | separate process | shipped, `infra/compose.yaml` |
-| MinIO (image) | AGPL-3.0 | **separate process — copyleft never reaches user code** | shipped, `infra/compose.yaml` |
+| SeaweedFS (image) | Apache-2.0 | separate process — never linked | shipped, `infra/compose.yaml` |
 | whisper.cpp / faster-whisper | MIT | separate process | **planned — no worker code invokes either yet** |
 | ffmpeg | LGPL/GPL depending on build | **invoked as a binary, never linked** | **planned — not installed by any Dockerfile yet** |
 
 This table states the policy and the current shape of the dependency tree; it is not the audit itself. **The audited inventory — every compiled-class package including the transitive tree, every pinned container image, the licence, the class and the date each was verified — lives in [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) and is re-checked by CI on every push.**
 
-**MinIO and ffmpeg are why the two-class rule exists.** Both are copyleft, both are fine, and both would be a licence problem if they were linked instead of run. The compose file starts MinIO as a service; the worker will shell out to ffmpeg once it is actually wired in. Neither is a library RecordMint imports.
+**ffmpeg is why the two-class rule still has a copyleft example.** It is copyleft, it is fine, and it would be a licence problem if it were linked instead of run: the worker will shell out to it once it is actually wired in. SeaweedFS clears even the stricter compiled-class bar at Apache-2.0 and runs as a separate process regardless. Neither is a library RecordMint imports.
 
 **Browser capture itself needs no dependency.** `getDisplayMedia` and `MediaRecorder` are the platform.
 
@@ -279,11 +279,11 @@ Safari capture is not a v1 promise and will not be implied by any installation p
 
 ## 17 · Self-hosting
 
-One `docker compose up` brings up the web app, the worker, PostgreSQL and MinIO. Configuration is environment variables with working defaults; the only values a first-run operator must supply are a secret and a public base URL.
+One `docker compose up` brings up the web app, the worker, PostgreSQL and SeaweedFS. Configuration is environment variables with working defaults; the only values a first-run operator must supply are a secret and a public base URL.
 
 - Migrations run on start and are idempotent.
 - A health endpoint reports storage reachability, database reachability, and whether transcription is enabled.
-- Storage is any S3-compatible endpoint. MinIO is the default because it needs no account, and nothing in the code knows which implementation it is talking to.
+- Storage is any S3-compatible endpoint. SeaweedFS is the default because it needs no account, and nothing in the code knows which implementation it is talking to.
 - **The first run must produce a working recording without reading the documentation.** That is the acceptance bar for the deployment story — not "it starts".
 
 ## 18 · Non-goals

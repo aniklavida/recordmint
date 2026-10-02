@@ -7,7 +7,7 @@
   ┌──────────────────────┐            ┌────────────────────┐        ┌───────────┐
   │ getDisplayMedia      │            │ web app            │        │    S3     │
   │ getUserMedia         │──create──▶ │  sessions, library │        │ compatible│
-  │ MediaRecorder        │            │  player page       │        │  MinIO    │
+  │ MediaRecorder        │            │  player page       │        │ SeaweedFS │
   │   ↓ timeslice chunks │◀─presign── │  presign broker    │───────▶│  locally  │
   └───────┬──────────────┘            └─────────┬──────────┘        └────┬──────┘
           │                                     │                       │
@@ -78,7 +78,7 @@ Running the queue in the database that is already required removes a service fro
 ## Boundaries
 
 - **Capture and chunked upload are framework-free.** `packages/recorder` imports no UI framework, so it can be tested in a browser harness and changed independently when browser behaviour shifts.
-- **Only `packages/storage` knows which object store is behind it.** MinIO locally and any bucket in production are the same code path.
+- **Only `packages/storage` knows which object store is behind it.** SeaweedFS locally and any bucket in production are the same code path.
 - **The object key layout is defined in exactly one file**, so deletion and retention cannot leave orphans.
 - **Authentication lives in the application**, not in a third-party identity provider — a self-hosted product that needs a vendor to log in is not self-hosted.
 - **Migrations are committed SQL, reviewed as code.** A migration is the one thing an operator cannot undo by redeploying.

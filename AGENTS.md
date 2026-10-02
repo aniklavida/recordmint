@@ -33,7 +33,7 @@ packages/
 ├── db/           schema, migrations, queries
 ├── storage/      S3 client, presigning, multipart
 └── shared/       types, IDs, validation, errors
-infra/            compose.yaml · minio/ · postgres/
+infra/            compose.yaml · seaweedfs/ · postgres/
 e2e/              Playwright
 ```
 
@@ -80,7 +80,7 @@ This is the part most likely to break, and the part hardest to test.
 | Compiled into shipped code | **MIT, Apache or BSD only** |
 | Run as a separate process | Copyleft acceptable — it never reaches user code |
 
-MinIO and ffmpeg are the second kind: MinIO is started as a service, ffmpeg is spawned as a binary. **Neither may become a linked library**, because the MIT promise is the commercial reason this project exists and a compiled copyleft dependency would take it away.
+SeaweedFS and ffmpeg are the second kind: SeaweedFS is started as a service, ffmpeg is spawned as a binary. **Neither may become a linked library**, because the MIT promise is the commercial reason this project exists and a compiled copyleft dependency would take it away. SeaweedFS is Apache-2.0 and so clears even the stricter first row — it is a separate process anyway.
 
 Anything reciprocal-for-consumers, or revenue-gated, is rejected regardless of quality.
 

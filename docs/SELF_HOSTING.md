@@ -19,8 +19,8 @@ RecordMint is designed to be self-hosted with minimal operational overhead: four
            │                          │        ┌──────────────────┐
            │                          ▼        │ PostgreSQL 16    │
            │                   ┌─────────────┐ │  (data + queue)  │
-           │                   │ MinIO / S3  │ └─────────▲────────┘
-           │                   │ (:9000)     │           │
+           │                   │ SeaweedFS   │ └─────────▲────────┘
+           │                   │ / S3 (:8333)│           │
            │                   └──────┬──────┘           ▼
            │                          │        ┌──────────────────┐
            │                          └───────▶│ apps/worker      │
@@ -34,7 +34,7 @@ The system consists of:
 - **`apps/web`**: Next.js web application serving the UI, handling user authentication, managing workspaces, and minting presigned S3 URLs.
 - **`apps/worker`**: Background worker processing thumbnails, host-based transcripts, and retention sweeps via `pg-boss`.
 - **PostgreSQL 16**: Primary relational store for metadata and the background job queue (no Redis required).
-- **S3-compatible Object Storage**: MinIO by default in compose, or any external S3 provider (AWS S3, Cloudflare R2, Wasabi, Backblaze B2).
+- **S3-compatible Object Storage**: SeaweedFS by default in compose, or any external S3 provider (AWS S3, Cloudflare R2, Wasabi, Backblaze B2).
 
 > [!IMPORTANT]
 > **Video bytes never proxy through the application server.** The browser uploads directly to the S3 bucket via presigned multipart URLs, and streams playback directly from S3 via presigned read URLs.
@@ -56,10 +56,14 @@ docker compose -f infra/compose.yaml up -d
 
 Once running:
 - Web app: `http://localhost:3000`
-- MinIO console: `http://localhost:9001` (user: `minioadmin`, password: `minioadmin123`)
+- Object storage S3 endpoint: `http://localhost:8333` (access key `recordmintdev`, secret `recordmint-dev-secret`)
 - Health check: `http://localhost:3000/api/health`
 
-Migrations run automatically on container startup. The default MinIO bucket `recordmint` is created automatically by the `minio-init` service.
+Migrations run automatically on container startup. The default bucket `recordmint` is created, kept private and given its CORS policy by the one-shot `s3-init` service.
+
+SeaweedFS has no web console in this stack: only its S3 port is published. Everything is administered through the S3 API (`infra/seaweedfs/bootstrap-bucket.mjs` does the bucket and CORS setup) or with any S3 client pointed at `S3_ENDPOINT`.
+
+The credentials above are throwaway local-development values, defined in [`infra/seaweedfs/s3-identity.json`](../infra/seaweedfs/s3-identity.json). That file grants them to one named identity and defines **no anonymous identity**, which is what makes the bucket private: an unsigned GET is refused with `403`, and a short-lived presigned URL is the only way to read an object. Replace the file's contents for a real deployment.
 
 ---
 
@@ -85,12 +89,13 @@ For a production deployment, create a `.env` file adjacent to `infra/compose.yam
 | `PUBLIC_BASE_URL` | Public HTTPS root of the web app | `http://localhost:3000` | **Yes** |
 | `SESSION_SECRET` | 32+ character random secret for session cookies | Development secret | **Yes** |
 | `DATABASE_URL` | PostgreSQL connection string | `postgres://recordmint:recordmint@postgres:5432/recordmint` | Only if using external DB |
-| `S3_ENDPOINT` | S3 API endpoint URL | `http://minio:9000` | Only if using external S3 |
+| `S3_ENDPOINT` | S3 API endpoint URL | `http://seaweedfs:8333` | Only if using external S3 |
 | `S3_REGION` | S3 region | `us-east-1` | No |
 | `S3_BUCKET` | S3 bucket name | `recordmint` | No |
-| `S3_ACCESS_KEY_ID` | S3 credentials access key | `minioadmin` | If using external S3 |
-| `S3_SECRET_ACCESS_KEY` | S3 credentials secret key | `minioadmin123` | If using external S3 |
-| `S3_FORCE_PATH_STYLE` | Force path-style requests (`true` for MinIO) | `true` | `false` for AWS S3 with DNS buckets |
+| `S3_ACCESS_KEY_ID` | S3 credentials access key | `recordmintdev` | If using external S3 |
+| `S3_SECRET_ACCESS_KEY` | S3 credentials secret key | `recordmint-dev-secret` | If using external S3 |
+| `S3_FORCE_PATH_STYLE` | Force path-style requests (`true` for self-hosted stores) | `true` | `false` for AWS S3 with DNS buckets |
+| `S3_CORS_ORIGINS` | Comma-separated origins the bucket's CORS policy allows | `*` | Set to `PUBLIC_BASE_URL` |
 | `TRANSCRIPTION_ENABLED` | Enable background transcription worker | `false` | No |
 | `WHISPER_MODEL` | Whisper model name (e.g., `base.en`, `small`) | `""` | When transcription enabled |
 | `SMTP_HOST` | Outbound mail server hostname (password resets) | `""` | For password reset |
@@ -128,13 +133,13 @@ recordmint.example.com {
     }
 }
 
-# S3 Object Storage (MinIO)
+# S3 Object Storage (SeaweedFS)
 s3.recordmint.example.com {
     encode zstd gzip
 
-    # Reverse proxy to MinIO S3 API
+    # Reverse proxy to the SeaweedFS S3 API
     # Note: client uploads large video chunks directly here; do not cap request body size.
-    reverse_proxy localhost:9000 {
+    reverse_proxy localhost:8333 {
         header_up Host {upstream_hostport}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
@@ -178,7 +183,7 @@ server {
     }
 }
 
-# S3 Object Storage (MinIO)
+# S3 Object Storage (SeaweedFS)
 server {
     listen 443 ssl http2;
     server_name s3.recordmint.example.com;
@@ -190,7 +195,7 @@ server {
     client_max_body_size 500M;
 
     location / {
-        proxy_pass http://127.0.0.1:9000;
+        proxy_pass http://127.0.0.1:8333;
         proxy_http_version 1.1;
 
         proxy_set_header Host $host;
@@ -218,9 +223,17 @@ server {
 
 Because uploads are sent directly from the browser to the S3 bucket using `PUT` requests, CORS must be configured on the bucket to allow requests from your `PUBLIC_BASE_URL`.
 
-For MinIO started via `infra/compose.yaml`, CORS is initialized automatically by `minio-init`.
+For the SeaweedFS instance started via `infra/compose.yaml`, the bucket and this CORS policy are applied by the one-shot `s3-init` service, which calls `CreateBucket` and `PutBucketCors` through the S3 API. Set `S3_CORS_ORIGINS` to your `PUBLIC_BASE_URL` (comma-separated for more than one) to narrow the allowed origins; the compose default is `*`, which is right for local development and for nothing else.
 
-If using an external S3 provider (AWS S3, Cloudflare R2, Wasabi), apply this CORS policy to your bucket:
+The same script is safe to re-run and safe to point at any other S3-compatible store, because it only uses the public S3 API:
+
+```bash
+S3_ENDPOINT=https://s3.example.com S3_BUCKET=recordmint \
+S3_ACCESS_KEY_ID=… S3_SECRET_ACCESS_KEY=… S3_CORS_ORIGINS=https://recordmint.example.com \
+node infra/seaweedfs/bootstrap-bucket.mjs
+```
+
+If applying this by hand instead, the policy is:
 
 ```json
 [
@@ -275,10 +288,10 @@ pg_dump -h localhost -p 5432 -U recordmint -F c -b -f backup_db.dump recordmint
 Sync all objects under the bucket prefix:
 
 ```bash
-# Using MinIO Client (mc):
-mc mirror local/recordmint ./backup_s3_$(date +%Y%m%d_%H%M%S)/
+# Using AWS CLI against the compose instance (any S3 client works):
+aws --endpoint-url http://localhost:8333 s3 sync s3://recordmint ./backup_s3/
 
-# Or using AWS CLI:
+# Or against a TLS-terminated public endpoint:
 aws --endpoint-url https://s3.recordmint.example.com s3 sync s3://recordmint ./backup_s3/
 ```
 
@@ -300,10 +313,10 @@ pg_restore -h localhost -p 5432 -U recordmint -d recordmint --clean --if-exists 
 Copy objects back into the storage bucket:
 
 ```bash
-# Using MinIO Client (mc):
-mc mirror ./backup_s3/ local/recordmint
+# Using AWS CLI against the compose instance (any S3 client works):
+aws --endpoint-url http://localhost:8333 s3 sync ./backup_s3/ s3://recordmint
 
-# Or using AWS CLI:
+# Or against a TLS-terminated public endpoint:
 aws --endpoint-url https://s3.recordmint.example.com s3 sync ./backup_s3/ s3://recordmint
 ```
 
@@ -385,9 +398,10 @@ Every capability claim below is classified according to project truthfulness sta
 
 | Feature | Status | Notes |
 |---|---|---|
-| Single-command Docker Compose stack | **Implemented and tested** | Web, worker, PostgreSQL 16, MinIO, and bucket initialization. |
+| Single-command Docker Compose stack | **Implemented and tested** | Web, worker, PostgreSQL 16, SeaweedFS, and bucket initialization. |
 | Direct-to-S3 chunked multipart upload | **Implemented and tested** | Media bytes never proxy through the Next.js server. |
 | Presigned short-lived playback URLs | **Implemented and tested** | Bucket denies public reads; player mints short-lived read URLs. |
+| SeaweedFS as the default object store | **Experimental** | Bucket, CORS, multipart round trip, ranged reads, expiry and anonymous-access refusal were all run against a real SeaweedFS 4.48 process. The container image itself is only ever started in CI — it has not been run from `infra/compose.yaml` on a machine with Docker. |
 | Database migrations & idempotence | **Implemented and tested** | Verified against empty and existing historical schema states. |
 | Automated backup and restore | **Implemented and tested** | Verified end-to-end with real database dump and S3 object payload hashes. |
 | Healthcheck endpoint (`/api/health`) | **Implemented and tested** | Reports real connection states for database, storage, and transcription. |

@@ -1,6 +1,8 @@
 # Third-party licence audit
 
-**Last verified: 2026-09-28.** This inventory is regenerated and re-checked at every release, not trusted from a prior note — see [`scripts/check-licenses.mjs`](../scripts/check-licenses.mjs), which CI runs on every push and pull request.
+**Last verified: 2026-10-02.** This inventory is regenerated and re-checked at every release, not trusted from a prior note — see [`scripts/check-licenses.mjs`](../scripts/check-licenses.mjs), which CI runs on every push and pull request.
+
+The npm side has not moved since the previous pass (2026-09-28) except for one addition: the workspace root now depends on `@aws-sdk/client-s3` (Apache-2.0) as a `devDependency`, so that `infra/seaweedfs/bootstrap-bucket.mjs` can resolve the same AWS SDK `packages/storage` already depends on instead of pulling in a second HTTP client. It is the same package and the same version already listed below, so no new package entered the resolved tree.
 
 ## Why this file exists
 
@@ -163,17 +165,20 @@ Trimming the final image down to a production-only `node_modules` (so this class
 
 ## Process class — Docker images in `infra/compose.yaml`
 
-Started as separate operating-system processes by `docker compose`. RecordMint never links against these; the worker calls MinIO over the S3 API, and the app talks to Postgres over the wire protocol. Copyleft here does not reach shipped code.
+Started as separate operating-system processes by `docker compose`. RecordMint never links against these; the worker calls the object store over the S3 API, and the app talks to Postgres over the wire protocol. Copyleft here does not reach shipped code.
 
 | Image | Pinned tag + digest | Licence | Verified |
 |---|---|---|---|
 | `postgres` | `16.15-alpine@sha256:cf78e76683b9ca8c5733cbbdce6c9262b45b6767934dd0a95e671f9a0fc20685` | PostgreSQL Licence (permissive, OSI-approved) | 2026-09-13 |
-| `quay.io/minio/minio` | `RELEASE.2025-09-07T16-13-09Z@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e` | AGPL-3.0 — **process only, never linked** | 2026-09-13 |
-| `quay.io/minio/mc` | `RELEASE.2025-08-13T08-35-41Z@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727` | AGPL-3.0 — **process only, never linked**, used solely to run the one-shot bucket-bootstrap script | 2026-09-13 |
+| `chrislusf/seaweedfs` | `4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d` | Apache-2.0 — **process only, never linked**, and it clears the stricter compiled-class bar anyway | 2026-10-02 |
 
-**Finding, fixed in this audit:** `infra/compose.yaml` previously pinned `minio/minio:latest` and `minio/mc:latest` on Docker Hub. Both tags — and the entire `minio/minio` and `minio/mc` Docker Hub repositories — return `404 object not found` as of 2026-09-13; MinIO's maintainers discontinued free Docker Hub distribution during 2025. The images are still published to `quay.io/minio/minio` and `quay.io/minio/mc`, where the most recent publicly available release is pinned above by tag and digest. This was a broken/unpinned reference, not a licence problem — AGPL-3.0 remains acceptable for a process-class dependency — and has been corrected directly, since a compose file that cannot pull is not a product decision. Whether to keep depending on a registry that may freeze again, mirror the image ourselves, or evaluate an alternative S3-compatible server long-term is a separate open question and is outside the scope of a licence audit.
+**SeaweedFS 4.48, verified 2026-10-02.** The licence is Apache-2.0, read from the project's own `LICENSE` file in its source repository at the `4.48` tag — the same method used for every other entry above. The digest is the multi-platform index digest published for `chrislusf/seaweedfs:4.48` on Docker Hub. It is a separate operating-system process started by `infra/compose.yaml`, in the class above, and is never linked into shipped code.
+
+What was and was not verified: the same `weed` 4.48 binary was run locally on this development machine (the Homebrew build) as a throwaway single-node cluster, and every S3 claim the application makes — bucket creation and CORS, a full presigned multipart round trip, abort, a non-zero-start `Range` answered `206` with the right `Content-Range`, `response-content-disposition`, presigned expiry returning `403`, an unsigned read returning `403`, and deletion of a recording's objects — was exercised against it. **The pinned container image itself was not started**: there was no Docker daemon available, so the image build, its entrypoint, its `/data` volume ownership handling and the compose healthcheck are verified only by reading that image's own upstream Dockerfile and entrypoint script at the `4.48` tag, and by CI on the `e2e` job.
 
 `postgres:16-alpine` previously floated across every 16.x patch release; it is now pinned to the exact patch (`16.15`) and digest that `16-alpine` currently resolves to.
+
+An earlier revision of this file recorded two images of the object store this project depended on until 2026-10-02. That dependency's distribution became permanently unavailable, so the images are no longer usable by a self-hoster and the `e2e` CI job could not start them at all. SeaweedFS replaced both, and the record of the change is kept in [`CHANGELOG.md`](../CHANGELOG.md) rather than here, where this file lists what actually ships.
 
 ### Planned, not yet shipped
 

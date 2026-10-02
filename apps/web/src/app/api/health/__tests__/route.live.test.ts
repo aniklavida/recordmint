@@ -50,7 +50,7 @@ describe.skipIf(!live)("GET /api/health against real dependencies", () => {
   );
 
   it.skipIf(expectedFailure !== "storage")(
-    "names storage when MinIO is stopped",
+    "names storage when the object store is stopped",
     async () => {
       vi.stubEnv("TRANSCRIPTION_ENABLED", "false");
       const result = await health();

@@ -652,7 +652,12 @@ input[type="checkbox"] {
 }
 
 .share-link-anchor {
-  display: none;
+  /* The link itself, openable in a new tab, on its own line under the copyable field. */
+  flex: 1 1 100%;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--acc2);
+  overflow-wrap: anywhere;
 }
 
 .error-banner {
